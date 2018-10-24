@@ -470,7 +470,8 @@ void ParameterManager::BayesianParameter::OnTune(double score, Eigen::VectorXd& 
 }
 
 bool ParameterManager::BayesianParameter::IsDoneTuning() const {
-  return iteration_ > 50;
+  int d = bayes_->Dim();
+  return iteration_ > 20 * d;
 }
 
 void ParameterManager::BayesianParameter::ResetState() {
