@@ -27,9 +27,9 @@ namespace common {
 
 class BayesianOptimization {
 public:
-  BayesianOptimization(int d, std::vector<std::pair<double, double>> bounds, double alpha);
+  BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha);
 
-  inline int Dim() const { return d_; };
+  inline unsigned long Dim() const { return d_; };
 
   void AddSample(const Eigen::VectorXd& x, double y);
 
@@ -66,7 +66,7 @@ private:
 
   bool CheckBounds(const Eigen::VectorXd& x);
 
-  int d_;
+  unsigned long d_;
   std::vector<std::pair<double, double>> bounds_;
 
   std::random_device rd_;  // Will be used to obtain a seed for the random number engine

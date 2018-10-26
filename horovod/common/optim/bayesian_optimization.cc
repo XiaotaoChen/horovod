@@ -39,8 +39,8 @@ std::vector<std::uniform_real_distribution<>> GetDistributions(std::vector<std::
 }
 
 
-BayesianOptimization::BayesianOptimization(int d, std::vector<std::pair<double, double>> bounds, double alpha)
-    : d_(d),
+BayesianOptimization::BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha)
+    : d_(bounds.size()),
       bounds_(bounds),
       dists_(GetDistributions(bounds)),
       gpr_(GaussianProcessRegressor(alpha)) {}

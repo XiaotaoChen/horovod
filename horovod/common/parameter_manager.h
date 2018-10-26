@@ -73,7 +73,7 @@ public:
 private:
   void Tune(double score);
   void ReadyTune();
-  void SyncParams(double last_score);
+  void SyncParams();
 
   template <class T>
   struct ParameterScore {
@@ -232,7 +232,6 @@ private:
     bool hierarchical_allreduce;
     double tensor_fusion_threshold;
     double cycle_time;
-    double last_score;
     bool active;
   };
 
