@@ -39,9 +39,10 @@ std::vector<std::uniform_real_distribution<>> GetDistributions(std::vector<std::
 }
 
 
-BayesianOptimization::BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha)
+BayesianOptimization::BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha, double xi)
     : d_(bounds.size()),
       bounds_(bounds),
+      xi_(xi),
       dists_(GetDistributions(bounds)),
       gpr_(GaussianProcessRegressor(alpha)) {}
 
@@ -120,7 +121,7 @@ VectorXd BayesianOptimization::ProposeLocation(const MatrixXd& x_sample, const M
   return x_next;
 }
 
-VectorXd BayesianOptimization::ExpectedImprovement(const MatrixXd& x, const MatrixXd& x_sample, double xi) {
+VectorXd BayesianOptimization::ExpectedImprovement(const MatrixXd& x, const MatrixXd& x_sample) {
   Eigen::VectorXd mu;
   Eigen::VectorXd sigma;
   gpr_.Predict(x, mu, &sigma);
@@ -140,7 +141,7 @@ VectorXd BayesianOptimization::ExpectedImprovement(const MatrixXd& x, const Matr
     return 0.5 * std::erfc(-x * M_SQRT1_2);
   };
 
-  Eigen::VectorXd imp = mu.array() - mu_sample_opt - xi;
+  Eigen::VectorXd imp = mu.array() - mu_sample_opt - xi_;
 
   VectorXd z = imp.array() / sigma.array();
 

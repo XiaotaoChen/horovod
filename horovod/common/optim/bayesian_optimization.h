@@ -27,7 +27,7 @@ namespace common {
 
 class BayesianOptimization {
 public:
-  BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha);
+  BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha, double xi=0.1);
 
   inline unsigned long Dim() const { return d_; };
 
@@ -59,15 +59,15 @@ private:
   //  x: Points at which EI shall be computed (m x d).
   //  x_sample: Sample locations (n x d).
   //  y_sample: Sample values (n x 1).
-  //  xi: Exploitation-exploration trade-off parameter.
   //
   // Returns: Expected improvements at points X. '''
-  Eigen::VectorXd ExpectedImprovement(const Eigen::MatrixXd& x, const Eigen::MatrixXd& x_sample, double xi=0.1);
+  Eigen::VectorXd ExpectedImprovement(const Eigen::MatrixXd& x, const Eigen::MatrixXd& x_sample);
 
   bool CheckBounds(const Eigen::VectorXd& x);
 
   unsigned long d_;
   std::vector<std::pair<double, double>> bounds_;
+  double xi_;  //  Exploitation-exploration trade-off parameter.
 
   std::random_device rd_;  // Will be used to obtain a seed for the random number engine
   std::mt19937 gen_ = std::mt19937(rd_()); // Standard mersenne_twister_engine seeded with rd()
