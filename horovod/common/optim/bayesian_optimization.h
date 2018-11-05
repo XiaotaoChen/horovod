@@ -27,7 +27,7 @@ namespace common {
 
 class BayesianOptimization {
 public:
-  BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha, double xi=0.1);
+  BayesianOptimization(std::vector<std::pair<double, double>> bounds, double alpha, double xi=0.01);
 
   inline unsigned long Dim() const { return d_; };
 
