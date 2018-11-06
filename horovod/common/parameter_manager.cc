@@ -158,7 +158,7 @@ void ParameterManager::Update(const std::vector<std::string>& tensor_names, int6
 
   for (const std::string& tensor_name : tensor_names) {
     int32_t cycle = tensor_counts_[tensor_name]++;
-    if (cycle > cycle_ * 10) {
+    if (cycle > cycle_ * 5) {
 //      std::cerr << total_bytes_ << " bytes " << total_seconds_ << " seconds" << std::endl;
       scores_[cycle_] = total_bytes_ / total_seconds_;
       total_bytes_ = 0;

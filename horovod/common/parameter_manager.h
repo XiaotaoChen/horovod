@@ -215,7 +215,7 @@ private:
   bool active_;
   int32_t warmup_remaining_;
 
-  static constexpr int CYCLES = 10;
+  static constexpr int CYCLES = 5;
   double scores_[CYCLES];
   int32_t cycle_;
 
