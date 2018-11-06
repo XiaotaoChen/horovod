@@ -58,7 +58,7 @@ double Stddev(double* scores, int n) {
   double mean = Mean(scores, n);
   double num = 0.0;
   for (int i = 0; i < n; i++) {
-    num += (scores[n] - mean) * (scores[n] - mean);
+    num += (scores[i] - mean) * (scores[i] - mean);
   }
   num /= n;
   return std::sqrt(num);
