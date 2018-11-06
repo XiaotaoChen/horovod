@@ -46,6 +46,24 @@ Eigen::VectorXd CreateVector(double x1, double x2) {
   return v;
 }
 
+double Mean(double* scores, int n) {
+  double sum = 0.0;
+  for (int i = 0; i < n; i++) {
+    sum += scores[i];
+  }
+  return sum / n;
+}
+
+double Stddev(double* scores, int n) {
+  double mean = Mean(scores, n);
+  double num = 0.0;
+  for (int i = 0; i < n; i++) {
+    num += (scores[n] - mean) * (scores[n] - mean);
+  }
+  num /= n;
+  return std::sqrt(num);
+}
+
 // ParameterManager
 ParameterManager::ParameterManager() :
     hierarchical_allreduce_(CategoricalParameter<bool>(std::vector<bool>{false, true}, *this, nullptr)),
@@ -174,11 +192,11 @@ void ParameterManager::Update(const std::vector<std::string>& tensor_names, int6
   if (cycle_ >= CYCLES) {
     std::sort(scores_, scores_ + CYCLES);
     double med_score = scores_[CYCLES / 2];
-    Tune(med_score);
+    Tune(med_score, Mean(scores_, CYCLES), Stddev(scores_, CYCLES));
   }
 }
 
-void ParameterManager::Tune(double score) {
+void ParameterManager::Tune(double score, double mean, double stddev) {
   if (warmup_remaining_ > 0) {
     warmup_remaining_--;
     std::cerr << "WARMUP DONE | hierarchical tunable="
@@ -192,12 +210,16 @@ void ParameterManager::Tune(double score) {
 
     if (rank_ == root_rank_) {
       std::cerr << "[" << hierarchical_allreduce_.Value() << ", "
-                << joint_params_.Value(cycle_time_ms) << " ms , " << joint_params_.Value(fusion_buffer_threshold_mb) << " mb ] " << score
+                << joint_params_.Value(cycle_time_ms) << " ms , " << joint_params_.Value(fusion_buffer_threshold_mb) << " mb ] "
+                << score << " (" << mean << " +- " << (1.96 * stddev) << ")"
                 << std::endl;
       if (writing_ && file_.good()) {
         file_ << hierarchical_allreduce_.Value() << ","
               << joint_params_.Value(cycle_time_ms) << ","
-              << joint_params_.Value(fusion_buffer_threshold_mb) << "," << score
+              << joint_params_.Value(fusion_buffer_threshold_mb) << ","
+              << score << ","
+              << mean << ","
+              << stddev
               << std::endl;
       }
 

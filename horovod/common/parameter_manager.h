@@ -71,7 +71,7 @@ public:
   void Update(const std::vector<std::string>& tensor_names, int64_t bytes, double seconds);
 
 private:
-  void Tune(double score);
+  void Tune(double score, double mean, double stddev);
   void ReadyTune();
   void SyncParams();
 
