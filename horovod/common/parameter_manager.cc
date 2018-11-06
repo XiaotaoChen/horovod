@@ -190,6 +190,13 @@ void ParameterManager::Update(const std::vector<std::string>& tensor_names, int6
   total_seconds_ += seconds;
 
   if (cycle_ >= CYCLES) {
+    if (rank_ == root_rank_) {
+      std::cerr << "score: ";
+      for (int i = 0; i < CYCLES; i++) {
+        std::cerr << scores_[i] << ",";
+      }
+      std::cerr << std::endl;
+    }
     std::sort(scores_, scores_ + CYCLES);
     double med_score = scores_[CYCLES / 2];
     Tune(med_score, Mean(scores_, CYCLES), Stddev(scores_, CYCLES));
