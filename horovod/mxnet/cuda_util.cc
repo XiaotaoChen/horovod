@@ -13,9 +13,9 @@
 // limitations under the License.
 // =============================================================================
 
+#include <mxnet/base.h>
 #if HAVE_CUDA
 #include "cuda_runtime.h"
-#include <mxnet/base.h>
 #endif
 
 #include "../common/common.h"
