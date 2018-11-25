@@ -46,13 +46,6 @@ protected:
   T* tensor_;
 };
 
-template <class T> class MXTemporaryBuffer : public MXTensor<T> {
-public:
-  MXTemporaryBuffer(int device, int dtype);
-  ~MXTemporaryBuffer();
-  virtual T* tensor() const;
-};
-
 template <class T> class MXOpContext : public OpContext {
 public:
   MXOpContext(int device, T* output);

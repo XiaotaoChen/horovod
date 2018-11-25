@@ -81,20 +81,6 @@ template <class T> int64_t MXTensor<T>::size() const {
 }
 
 template <class T>
-MXTemporaryBuffer<T>::MXTemporaryBuffer(int device, int dtype)
-    : MXTensor<T>(nullptr) {
-  this->tensor_ = TensorUtil::New(device, dtype);
-}
-
-template <class T> MXTemporaryBuffer<T>::~MXTemporaryBuffer() {
-  TensorUtil::Free(this->tensor_);
-}
-
-template <class T> T* MXTemporaryBuffer<T>::tensor() const {
-  return this->tensor_;
-}
-
-template <class T>
 MXOpContext<T>::MXOpContext(int device, T* output)
     : device_(device), output_(output) {}
 
@@ -137,7 +123,6 @@ void ThrowIfError(Status status) {
 }
 
 template class MXTensor<NDArray>;
-template class MXTemporaryBuffer<NDArray>;
 template class MXOpContext<NDArray>;
 
 } // namespace mxnet

@@ -158,15 +158,5 @@ void TensorUtil::DivideTensorInPlace(NDArray* tensor, int value) {
   *tensor /= value;
 }
 
-#ifdef HAVE_CUDA
-void TensorUtil::CopyCPUToCuda(NDArray* cpu, NDArray* cuda) {
-  TensorUtil::Copy(cuda, cpu);
-}
-
-void TensorUtil::AsyncCopyCudaToCPU(NDArray* cuda, NDArray* cpu) {
-  TensorUtil::Copy(cpu, cuda);
-}
-#endif
-
 } // namespace mxnet
 } // namespace horovod
