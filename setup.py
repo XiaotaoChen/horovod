@@ -574,7 +574,19 @@ def build_mx_extension(build_ext, options):
     mx_compile_flags, mx_link_flags = get_mx_flags(
         build_ext, options['COMPILE_FLAGS'])
 
-    mxnet_mpi_lib.define_macros = options['MACROS']
+    # set mxnet macros used by included header files
+    # set default MSHADOW_USE_CUDA=0, MXNET_USE_MKLDNN=0
+    MACROS = options['MACROS']
+    if os.environ.get('MSHADOW_USE_CUDA'):
+        MACROS += [('MSHADOW_USE_CUDA', os.environ.get('MSHADOW_USE_CUDA'))]
+    else:
+        MACROS += [('MSHADOW_USE_CUDA', 0)]
+    if os.environ.get('MXNET_USE_MKLDNN'):
+        MACROS += [('MXNET_USE_MKLDNN', os.environ.get('MXNET_USE_MKLDNN'))]
+    else:
+        MACROS += [('MXNET_USE_MKLDNN', 0)]
+
+    mxnet_mpi_lib.define_macros = MACROS
     mxnet_mpi_lib.include_dirs = options['INCLUDES']
     mxnet_mpi_lib.sources = options['SOURCES'] + \
         ['horovod/mxnet/mpi_ops.cc',
