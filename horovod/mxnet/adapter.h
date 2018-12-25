@@ -61,6 +61,19 @@ private:
   T* output_;
 };
 
+template <class T> class MXBF16Tensor : public MXTensor {
+public:
+  MXBF16Tensor(T* tensor);
+  virtual const MPIDataType dtype() const override;
+  virtual const void* data() const override;
+  virtual int64_t size() const override;
+
+protected:
+  T* tensor_;
+  unsigned short* bf16dptr_;
+};
+
+
 void ThrowIfError(Status status);
 
 } // namespace mxnet 

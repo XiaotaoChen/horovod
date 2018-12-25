@@ -33,7 +33,8 @@ enum MPIDataType {
   HOROVOD_FLOAT16 = 6,
   HOROVOD_FLOAT32 = 7,
   HOROVOD_FLOAT64 = 8,
-  HOROVOD_BOOL = 9
+  HOROVOD_BOOL = 9,
+  HOROVOD_BF16 = 10
 };
 
 const std::string& MPIDataType_Name(MPIDataType value);

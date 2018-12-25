@@ -43,7 +43,6 @@ public:
   static void ResizeNd(NDArray* tensor, int nDimension, int64_t* size);
   static void Copy(NDArray* output, NDArray* tensor);
   static void DivideTensorInPlace(NDArray* tensor, int value);
-
 #if HAVE_CUDA
   static void CopyCPUToCuda(NDArray* cpu, NDArray* cuda);
   static void AsyncCopyCudaToCPU(NDArray* cuda, NDArray* cpu);
@@ -58,6 +57,8 @@ private:
   static const size_t kInt32Size   = 4;
   static const size_t kInt8Size    = 1;
   static const size_t kInt64Size   = 8;
+  // to support bf16
+  static const size_t kBf16Size = 2;
 };
 
 } // namespace mxnet

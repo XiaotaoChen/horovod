@@ -122,6 +122,24 @@ void ThrowIfError(Status status) {
   }
 }
 
+template <class T> MXBF16Tensor<T>::MXBF16Tensor(T* tensor) : tensor_(tensor) {
+  //(TODO) convert tensor to bf16tensor
+
+}
+
+template <class T> const MPIDataType MXBF16Tensor<T>::dtype() const {
+  return MPIDataType::HOROVOD_BF16;
+}
+
+template <class T> const void* MXBF16Tensor<T>::data() const {
+  return static_cast<void*>(bf16dptr_);
+}
+
+template <class T> int64_t MXBF16Tensor<T>::size() const {
+  return (int64_t)(tensor->shape().Size()) * TensorUtil::kBf16Size;
+}
+
+
 template class MXTensor<NDArray>;
 template class MXOpContext<NDArray>;
 
