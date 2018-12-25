@@ -69,7 +69,6 @@ public:
   virtual int64_t size() const override;
 
 protected:
-  T* tensor_;
   unsigned short* bf16dptr_;
 };
 

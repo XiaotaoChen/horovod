@@ -122,7 +122,7 @@ void ThrowIfError(Status status) {
   }
 }
 
-template <class T> MXBF16Tensor<T>::MXBF16Tensor(T* tensor) : tensor_(tensor) {
+template <class T> MXBF16Tensor<T>::MXBF16Tensor(T* tensor) : MXTensor(tensor) {
   //(TODO) convert tensor to bf16tensor
 
 }
