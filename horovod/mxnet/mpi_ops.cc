@@ -17,6 +17,7 @@
 #include <memory>
 #include <thread>
 
+#include "../common/bf16.h"
 #include "../common/operations.h"
 #include "adapter.h"
 #include "cuda_util.h"
@@ -52,14 +53,24 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
  
   auto handle = handle_manager.AllocateHandle(cb);
   auto device = TensorUtil::GetDevice(tensor);
-  auto hvd_tensor = std::make_shared<MXTensor<NDArray>>(tensor);
+//  auto hvd_tensor = std::make_shared<MXTensor<NDArray>>(tensor);
+  auto hvd_tensor = std::make_shared<MXBF16Tensor<NDArray>>(tensor);
   auto hvd_context = std::make_shared<MXOpContext<NDArray>>(device, output);
-  auto hvd_output = std::make_shared<MXTensor<NDArray>>(output);
+//  auto hvd_output = std::make_shared<MXTensor<NDArray>>(output);
+  auto hvd_output = std::make_shared<MXBF16Tensor<NDArray>>(output);
 
   auto enqueue_result = EnqueueTensorAllreduce(
       hvd_context, hvd_tensor, hvd_output, nullptr,
       GetOpNameHandle("allreduce", name, handle), device,
       [handle, average, output](const Status& status) {
+        // convert bf16_tensor to fp32, assign to output
+        BF16ToFloat(hvd_tensor.bf16dptr_,
+                    reinterpret_cast<float*>(TensorUtil::GetData(output)),
+                    output->shape().Size(),
+                    0);
+        // free the memory of bf16 pointer
+        free(hvd_tensor.bf16dptr_);
+
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
       });
