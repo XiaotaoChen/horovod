@@ -145,8 +145,8 @@ template <class T> int64_t MXBF16Tensor<T>::size() const {
   return (int64_t)(this->tensor_->shape().Size()) * sizeof(unsigned short);
 }
 
-template <class T> void* MXBF16Tensor<T>::multable_data() {
-  return this->bf16dptr_;
+template <class T> MXBF16Tensor<T>::~MXBF16Tensor(){
+  free(this->bf16dptr_);
 }
 
 template class MXTensor<NDArray>;

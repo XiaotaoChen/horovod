@@ -67,7 +67,7 @@ public:
   virtual const MPIDataType dtype() const override;
   virtual const void* data() const override;
   virtual int64_t size() const override;
-  void* multable_data();
+  ~MXBF16Tensor();
 
 private:
   unsigned short* bf16dptr_;

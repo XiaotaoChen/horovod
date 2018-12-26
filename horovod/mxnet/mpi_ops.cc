@@ -68,8 +68,6 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
                     reinterpret_cast<float*>(output->data().dptr<float>()),
                     output->shape().Size(),
                     0);
-        // free the memory of bf16 pointer
-        free(hvd_tensor->multable_data());
 
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
