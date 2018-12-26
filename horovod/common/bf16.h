@@ -9,14 +9,18 @@
 #ifndef HOROVOD_BF16_H
 #define HOROVOD_BF16_H
 
+#include "mpi.h"
+
 namespace horovod {
 namespace common {
 
-inline void BF16ToFloat(unsigned short* src, float* dest, int len);
+inline unsigned short* bf16_alloc(size_t alignment, size_t size);
 
-inline void FloatToBF16(float* src, unsigned short* dest, int len);
+inline void BF16ToFloat(unsigned short* src, float* dest, int len, int type_flag);
 
-void BF16_sum(void* invec, void* inoutvec, int* len);
+inline void FloatToBF16(float* src, unsigned short* dest, int len, int type_flag);
+
+void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype);
 
 } // namespace common
 } // namespace horovod

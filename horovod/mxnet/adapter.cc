@@ -22,6 +22,7 @@
 #include "adapter.h"
 #include "cuda_util.h"
 #include "tensor_util.h"
+#include "../common/bf16.h"
 
 namespace horovod {
 namespace mxnet {
@@ -123,8 +124,13 @@ void ThrowIfError(Status status) {
 }
 
 template <class T> MXBF16Tensor<T>::MXBF16Tensor(T* tensor) : MXTensor(tensor) {
-  //(TODO) convert tensor to bf16tensor
-
+  int len = tensor->shape().Size();
+  size_t bf16_size = len * TensorUtil::kBf16Size;
+  // 0: avx512 intrin, 1: m256 convert, other: convert by shift(>>).
+  int type_flag = 0;
+  // create bf16 tensor from tensor
+  bf16dptr_ = bf16_alloc(bf16_size);
+  FloatToBF16(reinterpret_cast<float*>(TensorUtil::GetData(tensor)), bf16dptr_, len, type_flag);
 }
 
 template <class T> const MPIDataType MXBF16Tensor<T>::dtype() const {
@@ -132,7 +138,7 @@ template <class T> const MPIDataType MXBF16Tensor<T>::dtype() const {
 }
 
 template <class T> const void* MXBF16Tensor<T>::data() const {
-  return static_cast<void*>(bf16dptr_);
+  return reinterpret_cast<void*>(bf16dptr_);
 }
 
 template <class T> int64_t MXBF16Tensor<T>::size() const {

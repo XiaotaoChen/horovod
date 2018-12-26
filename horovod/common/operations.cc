@@ -42,6 +42,7 @@
 #include "mpi_message.h"
 #include "operations.h"
 #include "timeline.h"
+#include "bf16.h"
 
 /*
  * Allreduce, Allgather and Broadcast Ops.
@@ -186,6 +187,10 @@ struct HorovodGlobalState {
   // MPI custom data type for float16.
   MPI_Datatype mpi_float16_t;
   MPI_Op mpi_float16_sum;
+
+  // MPI custom data type for bf16.
+  MPI_Datatype mpi_bf16_t;
+  MPI_Op mpi_bf16_sum;
 
   // Private MPI communicator for Horovod to ensure no collisions with other
   // threads using MPI.
@@ -538,6 +543,8 @@ MPI_Datatype GetMPIDataType(const std::shared_ptr<Tensor> tensor) {
     return MPI_DOUBLE;
   case HOROVOD_BOOL:
     return MPI_C_BOOL;
+  case HOROVOD_BF16:
+    return horovod_global.mpi_bf16_t;
   default:
     throw std::logic_error("Type " + MPIDataType_Name(tensor->dtype()) +
                            " is not supported in MPI mode.");
@@ -1135,13 +1142,22 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
           ACTIVITY_END_ALL(entries, timeline)
 
           ACTIVITY_START_ALL(entries, timeline, MPI_ALLREDUCE)
+
+          // choose the summation OP according to the data type.
+          MPI_Op sum_op;
+          if (first_entry.tensor->dtype() == HOROVOD_FLOAT16) {
+            sum_op = horovod_global.mpi_float16_sum;
+          } else if (first_entry.tensor->dtype() == HOROVOD_BF16) {
+            sum_op = horovod_global.mpi_bf16_sum;
+          } else {
+            sum_op = MPI_SUM;
+          }
+
           MPI_CHECK(entries, "MPI_Allreduce",
                     MPI_Allreduce(MPI_IN_PLACE, host_buffer,
                                   (int)total_num_elements,
                                   GetMPIDataType(first_entry.tensor),
-                                  first_entry.tensor->dtype() == HOROVOD_FLOAT16
-                                      ? horovod_global.mpi_float16_sum
-                                      : MPI_SUM,
+                                  sum_op,
                                   horovod_global.cross_comm))
           ACTIVITY_END_ALL(entries, timeline)
 
@@ -1270,13 +1286,22 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
       for (auto& e : entries) {
         num_elements += e.tensor->shape().num_elements();
       }
+
+      // choose the summation OP according to the data type.
+      MPI_Op sum_op;
+      if (first_entry.tensor->dtype() == HOROVOD_FLOAT16) {
+        sum_op = horovod_global.mpi_float16_sum;
+      } else if (first_entry.tensor->dtype() == HOROVOD_BF16) {
+        sum_op = horovod_global.mpi_bf16_sum;
+      } else {
+        sum_op = MPI_SUM;
+      }
+
       MPI_CHECK(entries, "MPI_Allreduce",
                 MPI_Allreduce(MPI_IN_PLACE, (void*)buffer_data,
                               (int)num_elements,
                               GetMPIDataType(first_entry.tensor),
-                              first_entry.tensor->dtype() == HOROVOD_FLOAT16
-                                  ? horovod_global.mpi_float16_sum
-                                  : MPI_SUM,
+                              sum_op,
                               horovod_global.mpi_comm))
       ACTIVITY_END_ALL(entries, timeline)
 
@@ -1315,13 +1340,21 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
       const void* sendbuf = e.tensor->data() == e.output->data()
                                 ? MPI_IN_PLACE
                                 : e.tensor->data();
+      // choose the summation OP according to the data type.
+      MPI_Op sum_op;
+      if (first_entry.tensor->dtype() == HOROVOD_FLOAT16) {
+        sum_op = horovod_global.mpi_float16_sum;
+      } else if (first_entry.tensor->dtype() == HOROVOD_BF16) {
+        sum_op = horovod_global.mpi_bf16_sum;
+      } else {
+        sum_op = MPI_SUM;
+      }
+
       MPI_CHECK(entries, "MPI_Allreduce",
                 MPI_Allreduce(sendbuf, (void*)e.output->data(),
                               (int)e.tensor->shape().num_elements(),
                               GetMPIDataType(e.tensor),
-                              first_entry.tensor->dtype() == HOROVOD_FLOAT16
-                                  ? horovod_global.mpi_float16_sum
-                                  : MPI_SUM,
+                              sum_op,
                               horovod_global.mpi_comm))
       ACTIVITY_END_ALL(entries, timeline)
     }
@@ -1535,10 +1568,17 @@ void BackgroundThreadLoop(HorovodGlobalState& state) {
   MPI_Datatype mpi_float16_t;
   MPI_Type_contiguous(2, MPI_BYTE, &mpi_float16_t);
   MPI_Type_commit(&mpi_float16_t);
-
   // Create custom MPI float16 summation op.
   MPI_Op mpi_float16_sum;
   MPI_Op_create(&float16_sum, 1, &mpi_float16_sum);
+
+  // Create custom MPI bf16 data type.
+  MPI_Datatype mpi_bf16_t;
+  MPI_Type_contiguous(2, MPI_BYTE, &mpi_bf16_t);
+  MPI_Type_commit(&mpi_bf16_t);
+  // Create custom MPI bf16 summation op.
+  MPI_Op mpi_bf16_sum;
+  MPI_Op_create(&bf16_sum, 1, &mpi_bf16_sum);
 
   state.rank = rank;
   state.local_rank = local_rank;
@@ -1552,6 +1592,9 @@ void BackgroundThreadLoop(HorovodGlobalState& state) {
   state.mpi_float16_sum = mpi_float16_sum;
   state.mpi_threads_supported = (provided == MPI_THREAD_MULTIPLE);
   state.local_comm_ranks = local_comm_ranks;
+
+  state.mpi_bf16_t = mpi_bf16_t;
+  state.mpi_bf16_sum = mpi_bf16_sum;
 
   // Open the timeline file on coordinator.
   auto horovod_timeline = std::getenv(HOROVOD_TIMELINE);
@@ -1904,6 +1947,7 @@ bool RunLoopOnce(HorovodGlobalState& state, bool is_coordinator) {
 
   return !should_shut_down;
   MPI_Op_free(&state.mpi_float16_sum);
+  MPI_Op_free(&state.mpi_bf16_sum);
 }
 
 // Start Horovod background thread. Ensure that this is
@@ -1972,6 +2016,10 @@ void horovod_shutdown() {
 
   if (horovod_global.mpi_float16_t != MPI_DATATYPE_NULL) {
     MPI_Type_free(&horovod_global.mpi_float16_t);
+  }
+
+  if (horovod_global.mpi_bf16_t != MPI_DATATYPE_NULL) {
+    MPI_Type_free(&horovod_global.mpi_bf16_t);
   }
 
   if (horovod_global.should_finalize) {
