@@ -62,14 +62,14 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
   auto enqueue_result = EnqueueTensorAllreduce(
       hvd_context, hvd_tensor, hvd_output, nullptr,
       GetOpNameHandle("allreduce", name, handle), device,
-      [handle, average, output](const Status& status) {
+      [handle, average, output, hvd_tensor](const Status& status) {
         // convert bf16_tensor to fp32, assign to output
-        BF16ToFloat(hvd_tensor.bf16dptr_,
-                    reinterpret_cast<float*>(TensorUtil::GetData(output)),
+        BF16ToFloat(reinterpret_cast<const unsigned short*>(hvd_tensor->data()),
+                    reinterpret_cast<float*>(output->data().dptr<float>()),
                     output->shape().Size(),
                     0);
         // free the memory of bf16 pointer
-        free(hvd_tensor.bf16dptr_);
+        free(hvd_tensor->multable_data());
 
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);

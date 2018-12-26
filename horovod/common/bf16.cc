@@ -18,7 +18,7 @@ namespace common {
 inline unsigned short* bf16_alloc(size_t size){
   //size must be an integral multiple of 64.
   assert(size % 64 == 0 && "size must be an integral multiple of 64 that needed by immintrin for bf16 convertion.");
-  return reinterpret_cast<unsigned short*>(aligned_alloc(64, len*sizeof(unsigned short)));
+  return reinterpret_cast<unsigned short*>(aligned_alloc(64, size));
 }
 
 inline void convert_f32_to_b16(__m512i src, __m256i* dest)
@@ -48,7 +48,7 @@ inline void convert_b16_to_f32(__m256i src, __m256i *dst0, __m256i *dst1)
     *dst1 = _mm256_unpackhi_epi16(zeros, src);
 }
 
-inline void BF16ToFloat(unsigned short* src, float* dest, int type_flag){
+inline void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag){
  switch (type_flag)
  {
    case 0:
@@ -66,7 +66,7 @@ inline void BF16ToFloat(unsigned short* src, float* dest, int type_flag){
  }
 }
 
-inline void FloatToBF16(float* src, unsigned short* dest, int type_flag){
+inline void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag){
  switch (type_flag)
  {
    case 0:

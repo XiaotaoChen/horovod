@@ -61,14 +61,15 @@ private:
   T* output_;
 };
 
-template <class T> class MXBF16Tensor : public MXTensor {
+template <class T> class MXBF16Tensor : public MXTensor<T> {
 public:
   MXBF16Tensor(T* tensor);
   virtual const MPIDataType dtype() const override;
   virtual const void* data() const override;
   virtual int64_t size() const override;
+  void* multable_data();
 
-protected:
+private:
   unsigned short* bf16dptr_;
 };
 

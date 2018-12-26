@@ -14,11 +14,11 @@
 namespace horovod {
 namespace common {
 
-inline unsigned short* bf16_alloc(size_t alignment, size_t size);
+inline unsigned short* bf16_alloc(size_t size);
 
-inline void BF16ToFloat(unsigned short* src, float* dest, int len, int type_flag);
+inline void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag);
 
-inline void FloatToBF16(float* src, unsigned short* dest, int len, int type_flag);
+inline void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag);
 
 void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype);
 
