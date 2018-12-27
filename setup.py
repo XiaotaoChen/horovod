@@ -84,7 +84,8 @@ def check_mx_version():
 def get_cpp_flags(build_ext):
     last_err = None
     default_flags = ['-std=c++11', '-fPIC', '-O2']
-    avx_flags = ['-mf16c', '-mavx', '-mavx512f', '-mavx512bw']
+    avx_flags = ['-mf16c', '-mavx']
+    # avx_flags = ['-mf16c', '-mavx', '-mavx512f', '-mavx512bw']
     if sys.platform == 'darwin':
         # Darwin most likely will have Clang, which has libc++.
         flags_to_try = [default_flags + ['-stdlib=libc++'] + avx_flags,
