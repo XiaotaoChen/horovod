@@ -128,7 +128,7 @@ template <class T> MXBF16Tensor<T>::MXBF16Tensor(T* tensor) : MXTensor<T>(tensor
   size_t bf16_size = len * sizeof(unsigned short);
   // create bf16 tensor from tensor
   this->bf16dptr_ = bf16_alloc(bf16_size);
-  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, 0);
+  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, 2);
 //  FloatToBF16(reinterpret_cast<const float*>(static_cast<void*>(tensor->data().dptr<float>())), this->bf16dptr_, len, 0);
 }
 

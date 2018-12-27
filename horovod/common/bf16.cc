@@ -61,7 +61,7 @@ void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag)
 }
 
 void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype){
-  int type_flag = 0;
+  int type_flag = 2;
   int i=0;
   if(type_flag == 0){
     for(; i < (*len / 16) * 16; i += 16)
