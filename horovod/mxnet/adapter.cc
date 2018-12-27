@@ -126,11 +126,10 @@ void ThrowIfError(Status status) {
 template <class T> MXBF16Tensor<T>::MXBF16Tensor(T* tensor) : MXTensor<T>(tensor) {
   int len = tensor->shape().Size();
   size_t bf16_size = len * sizeof(unsigned short);
-  // 0: avx512 intrin, 1: m256 convert, other: convert by shift(>>).
-  int type_flag = 0;
   // create bf16 tensor from tensor
   this->bf16dptr_ = bf16_alloc(bf16_size);
-  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, type_flag);
+  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, 0);
+//  FloatToBF16(reinterpret_cast<const float*>(static_cast<void*>(tensor->data().dptr<float>())), this->bf16dptr_, len, 0);
 }
 
 template <class T> const MPIDataType MXBF16Tensor<T>::dtype() const {

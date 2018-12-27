@@ -84,7 +84,7 @@ def check_mx_version():
 def get_cpp_flags(build_ext):
     last_err = None
     default_flags = ['-std=c++11', '-fPIC', '-O2']
-    avx_flags = ['-mf16c', '-mavx']
+    avx_flags = ['-mf16c', '-mavx', '-mavx512f', '-mavx512bw']
     if sys.platform == 'darwin':
         # Darwin most likely will have Clang, which has libc++.
         flags_to_try = [default_flags + ['-stdlib=libc++'] + avx_flags,
@@ -489,7 +489,8 @@ def get_common_options(build_ext):
                'horovod/common/mpi_message.cc',
                'horovod/common/half.cc',
                'horovod/common/operations.cc',
-               'horovod/common/timeline.cc']
+               'horovod/common/timeline.cc',
+               'horovod/common/bf16.cc']
     COMPILE_FLAGS = cpp_flags + shlex.split(mpi_flags)
     LINK_FLAGS = link_flags + shlex.split(mpi_flags)
     LIBRARY_DIRS = []
