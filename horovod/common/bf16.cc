@@ -28,14 +28,34 @@ void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag)
  switch (type_flag)
  {
    case 0:
-     convert_b16_to_f32(*(__m256i*)(src), (__m512i*)(dest));
+     {
+       int i = 0;
+       for(; i < (len / 16) * 16; i += 16){
+         convert_b16_to_f32(*(__m256i*)(src+i), (__m512i*)(dest+i));
+       }
+       // process the remaining data
+       unsigned int* dest_unsigned = reinterpret_cast<unsigned int*>(dest);
+       for(; i < len; i++){
+         *(dest_unsigned+i) = *(src+i)<<16;
+       }
+     }
      break;
    case 1:
-     convert_b16_to_f32(*(__m256i*)(src), (__m256i*)(dest), (__m256i*)(dest+8));
+     {
+       int i = 0;
+       for(; i < (len / 16) * 16; i += 16){
+         convert_b16_to_f32(*(__m256i*)(src+i), (__m256i*)(dest+i), (__m256i*)(dest+i+8));
+       }
+       // process the remaining data
+       unsigned int* dest_unsigned = reinterpret_cast<unsigned int*>(dest);
+       for(; i < len; i++){
+         *(dest_unsigned+i) = *(src+i)<<16;
+       }
+     }
      break;
    default:
      unsigned int* dest_unsigned = reinterpret_cast<unsigned int*>(dest);
-     for(int i=0; i<16; i++){
+     for(int i=0; i < len; i++){
        *(dest_unsigned+i) = *(src+i)<<16;
      }
      break;
@@ -46,15 +66,37 @@ void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag)
  switch (type_flag)
  {
    case 0:
-     convert_f32_to_b16(*(__m512i*)(src), (__m256i*)(dest));
+     {
+       int i = 0;
+       for(; i < (len / 16) * 16; i += 16){
+         convert_f32_to_b16(*(__m512i*)(src+i), (__m256i*)(dest+i));
+       }
+       // process the remaining data
+       const unsigned int* src_unsigned = reinterpret_cast<const unsigned int*>(src);
+       for(; i < len; i++){
+         *(dest+i) = *(src_unsigned+i)>>16;
+       }
+     }
      break;
    case 1:
-     convert_f32_to_b16(*(__m256i*)(src), *(__m256i*)(src+8), (__m256i*)(dest));
+     {
+       int i = 0;
+       for(; i < (len / 16) * 16; i += 16){
+         convert_f32_to_b16(*(__m256i*)(src+i), *(__m256i*)(src+i+8), (__m256i*)(dest+i));
+       }
+       // process the remaining data
+       const unsigned int* src_unsigned = reinterpret_cast<const unsigned int*>(src);
+       for(; i < len; i++){
+         *(dest+i) = *(src_unsigned+i)>>16;
+       }
+     }
      break;
-  default:
-     const unsigned int* src_unsigned = reinterpret_cast<const unsigned int*>(src);
-     for(int i=0; i<16; i++){
-       *(dest+i) = *(src_unsigned+i)>>16;
+   default:
+     {
+       const unsigned int* src_unsigned = reinterpret_cast<const unsigned int*>(src);
+       for(int i=0; i < len; i++){
+         *(dest+i) = *(src_unsigned+i)>>16;
+       }
      }
      break;
  }
