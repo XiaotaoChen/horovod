@@ -123,28 +123,28 @@ void ThrowIfError(Status status) {
   }
 }
 
-template <class T> MXBF16Tensor<T>::MXBF16Tensor(T* tensor) : MXTensor<T>(tensor) {
+template <> MXBF16Tensor<NDArray>::MXBF16Tensor(NDArray* tensor) : MXTensor<NDArray>(tensor) {
   int len = tensor->shape().Size();
   size_t bf16_size = len * sizeof(unsigned short);
   // create bf16 tensor from tensor
   this->bf16dptr_ = bf16_alloc(bf16_size);
-  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, 2);
-//  FloatToBF16(reinterpret_cast<const float*>(static_cast<void*>(tensor->data().dptr<float>())), this->bf16dptr_, len, 0);
+//  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, 2);
+  FloatToBF16(reinterpret_cast<const float*>(tensor->data().dptr<float>()), this->bf16dptr_, len, 0);
 }
 
-template <class T> const MPIDataType MXBF16Tensor<T>::dtype() const {
+template <> const MPIDataType MXBF16Tensor<NDArray>::dtype() const {
   return MPIDataType::HOROVOD_BF16;
 }
 
-template <class T> const void* MXBF16Tensor<T>::data() const {
+template <> const void* MXBF16Tensor<NDArray>::data() const {
   return reinterpret_cast<void*>(this->bf16dptr_);
 }
 
-template <class T> int64_t MXBF16Tensor<T>::size() const {
+template <> int64_t MXBF16Tensor<NDArray>::size() const {
   return (int64_t)(this->tensor_->shape().Size()) * sizeof(unsigned short);
 }
 
-template <class T> MXBF16Tensor<T>::~MXBF16Tensor(){
+template <> MXBF16Tensor<NDArray>::~MXBF16Tensor(){
   free(this->bf16dptr_);
 }
 
