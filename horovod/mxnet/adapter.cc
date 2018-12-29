@@ -154,6 +154,10 @@ template <> int64_t MXBF16Tensor<NDArray>::size() const {
   return (int64_t)(this->tensor_->shape().Size()) * sizeof(unsigned short);
 }
 
+template<> void* MXBF16Tensor<NDArray>::source_data() {
+  return const_cast<void*>(MXTensor<NDArray>::data());
+}
+
 template <> MXBF16Tensor<NDArray>::~MXBF16Tensor(){
   free(this->bf16dptr_);
 }

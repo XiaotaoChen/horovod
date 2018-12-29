@@ -7,6 +7,7 @@
  */
 
 //#include <immintrin.h>
+#include<cmath>
 #include "bf16.h"
 
 namespace horovod {
@@ -18,10 +19,11 @@ bool check_equal(const unsigned int a, const unsigned short b){
   return short_a == b;
 }
 
-bool check_equal(const unsigned int a, const unsigned int b){
-  unsigned short short_a = a>>16;
-  unsigned short short_b = b>>16;
-  return short_a == short_b;
+float cal_var_range(const unsigned int a, const unsigned short b){
+  const float* fp_a = reinterpret_cast<const float*>(&a);
+  const unsigned int int_b = b<<16;
+  const float* fp_b = reinterpret_cast<const float*>(&int_b);
+  return fabs((*fp_a) - (*fp_b)) / fabs(*fp_a);
 }
 
 //void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag){

@@ -19,9 +19,15 @@ namespace horovod {
 namespace common {
 
 inline unsigned short* bf16_alloc(size_t size){
+  // TODO set alignment to 256/512, it's performance may be better.
   //size must be an integral multiple of 64.
-  assert(size % 64 == 0 && "size must be an integral multiple of 64 that needed by immintrin for bf16 convertion.");
-  return reinterpret_cast<unsigned short*>(aligned_alloc(64, size));
+  if (size % 64 == 0) {
+    return reinterpret_cast<unsigned short*>(aligned_alloc(64, size));
+  }
+  else {
+    size_t new_size = (size / 64 + 1 ) * 64;
+    return reinterpret_cast<unsigned short*>(aligned_alloc(64, new_size));
+  }
 }
 
 //inline void convert_f32_to_b16(__m512i src, __m256i* dest)
@@ -53,7 +59,7 @@ inline unsigned short* bf16_alloc(size_t size){
 
 bool check_equal(const unsigned int a, const unsigned short b);
 
-bool check_equal(const unsigned int a, const unsigned int b);
+float cal_var_range(const unsigned int a, const unsigned short b);
 
 void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag);
 
