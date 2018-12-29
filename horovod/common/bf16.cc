@@ -13,12 +13,12 @@ namespace horovod {
 namespace common {
 
 
-bool check_equal(unsigned int a, unsigned short b){
+bool check_equal(const unsigned int a, const unsigned short b){
   unsigned short short_a = a>>16;
   return short_a == b;
 }
 
-bool check_equal(unsigned int a, unsigned int b){
+bool check_equal(const unsigned int a, const unsigned int b){
   unsigned short short_a = a>>16;
   unsigned short short_b = b>>16;
   return short_a == short_b;

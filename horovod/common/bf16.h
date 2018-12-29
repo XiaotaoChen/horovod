@@ -51,6 +51,10 @@ inline unsigned short* bf16_alloc(size_t size){
 //    *dst1 = _mm256_unpackhi_epi16(zeros, src);
 //}
 
+bool check_equal(const unsigned int a, const unsigned short b);
+
+bool check_equal(const unsigned int a, const unsigned int b);
+
 void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag);
 
 void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag);

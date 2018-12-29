@@ -68,6 +68,18 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
                     reinterpret_cast<float*>(output->data().dptr<float>()),
                     output->shape().Size(),
                     2);
+        // to check equal
+        const unsigned short* src_p = reinterpret_cast<const unsigned short*>
+                                        (hvd_tensor->data());
+        const unsigned int* dst_p = reinterpret_cast<const unsigned int*>
+                                    (output->data().dptr<float>());
+        int len = output->shape().Size();
+        for(int i=0; i < len; i++){
+          if(!check_equal(dst_p[i], src_p[i])){
+            printf("bf16 to float, check equal error: %d, %x, %x\n",
+                    i, src_p[i], dst_p[i]);
+          }
+        }
 
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
