@@ -30,8 +30,10 @@ import mxnet as mx
 
 # This is where Horovod's DistributedOptimizer wrapper for MXNet goes
 class DistributedOptimizer(mx.optimizer.Optimizer):
-    def __init__(self, optimizer):
+    def __init__(self, optimizer, rank=0):
         self._optimizer = optimizer
+        self._rank = rank
+        self._counts = {}
 
     def __getattr__(self, item):
         return getattr(self._optimizer, item)
@@ -40,11 +42,19 @@ class DistributedOptimizer(mx.optimizer.Optimizer):
         return self._optimizer.create_state_multi_precision(index, weight)
 
     def update(self, index, weight, grad, state):
-        allreduce_(grad, average=False, name=str(index))
+        if index not in self._counts.keys():
+            self._counts[index] = 1
+        else:
+            self._counts[index] += 1
+        allreduce_(grad, average=False, name=str(index), rank=self._rank, count=self._counts[index])
         return self._optimizer.update(index, weight, grad, state)
 
     def update_multi_precision(self, index, weight, grad, state):
-        allreduce_(grad, average=False, name=str(index))
+        if index not in self._counts.keys():
+            self._counts[index] = 1
+        else:
+            self._counts[index] += 1
+        allreduce_(grad, average=False, name=str(index), rank=self._rank, count=self._counts[index])
         return self._optimizer.update_multi_precision(index, weight, grad, state)
 
     def set_learning_rate(self, lr):

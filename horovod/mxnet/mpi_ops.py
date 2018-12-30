@@ -51,7 +51,7 @@ _handle_map = {}
 dll_path = os.path.join(os.path.dirname(__file__), 'mpi_lib' + get_ext_suffix())
 MPI_MXNET_LIB_CTYPES = ctypes.CDLL(dll_path, ctypes.RTLD_GLOBAL)
 
-def allreduce(tensor, average=True, name=None):
+def allreduce(tensor, average=True, name=None, rank=0, count=0):
     """
     A function that performs averaging or summation of the input tensor over all the
     Horovod processes. The input tensor is not modified.
@@ -79,15 +79,19 @@ def allreduce(tensor, average=True, name=None):
     c_in = tensor.handle
     c_out = output.handle
     if isinstance(name, string_types):
-        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)), c_str(name)))
+        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)),
+                                                                      c_str(name), ctypes.c_int(rank),
+                                                                      ctypes.c_int(count)))
     else:
-        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)), name))
+        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)),
+                                                                      name, ctypes.c_int(rank),
+                                                                      ctypes.c_int(count)))
     if average is True:
         output.wait_to_read()
         output /= size()
     return output
 
-def allreduce_(tensor, average=True, name=None):
+def allreduce_(tensor, average=True, name=None, rank=0, count=0):
     """
     A function that performs in-place averaging or summation of the input tensor over
     all the Horovod processes.
@@ -110,9 +114,13 @@ def allreduce_(tensor, average=True, name=None):
     c_in = tensor.handle
     c_out = tensor.handle
     if isinstance(name, string_types):
-        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)), c_str(name)))
+        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)),
+                                                                      c_str(name), ctypes.c_int(rank),
+                                                                      ctypes.c_int(count)))
     else:
-        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)), name))
+        check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(c_in, c_out, ctypes.c_int(int(False)),
+                                                                      name, ctypes.c_int(rank),
+                                                                      ctypes.c_int(count)))
     if average is True:
         tensor.wait_to_read()
         tensor /= size()
@@ -209,7 +217,7 @@ def broadcast_(tensor, root_rank, name=None):
     else:
         check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_broadcast_async(c_in, c_out, ctypes.c_int(root_rank), name))
     return tensor
-      
+
 # TODO(@ctcyang):
 # Add poll support
 def poll(handle):

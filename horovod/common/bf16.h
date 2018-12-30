@@ -61,6 +61,12 @@ bool check_equal(const unsigned int a, const unsigned short b);
 
 float cal_var_range(const unsigned int a, const unsigned short b);
 
+void cal_min_max_var(const unsigned int* fp32_p,
+                     const unsigned short* bf16_p,
+                     int len,
+                     float* min_var,
+                     float* max_var);
+
 void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag);
 
 void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag);

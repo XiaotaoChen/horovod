@@ -7,7 +7,8 @@
  */
 
 //#include <immintrin.h>
-#include<cmath>
+#include <cmath>
+#include <stdio.h>
 #include "bf16.h"
 
 namespace horovod {
@@ -23,7 +24,31 @@ float cal_var_range(const unsigned int a, const unsigned short b){
   const float* fp_a = reinterpret_cast<const float*>(&a);
   const unsigned int int_b = b<<16;
   const float* fp_b = reinterpret_cast<const float*>(&int_b);
-  return fabs((*fp_a) - (*fp_b)) / fabs(*fp_a);
+  float abs_err = fabs((*fp_a) - (*fp_b));
+  float var = 0;
+  if (fabs(*fp_a) > 0.00001){
+    var = abs_err / fabs(*fp_a);
+  }
+  if (var > 0.1) {
+    printf("range is larger than 0.1 , (a, b) %f, %f, %x, %x, abs_err: %f, range: %f\n", *fp_a, *fp_b, a, int_b, abs_err, var);
+  }
+  return var;
+}
+
+void cal_min_max_var(const unsigned int* fp32_p,
+                     const unsigned short* bf16_p,
+                     int len,
+                     float* min_var,
+                     float* max_var){
+  for (int i = 0; i < len; i++) {
+    float temp = cal_var_range(*(fp32_p + i), *(bf16_p + i));
+    if (temp < *min_var) {
+      *min_var = temp;
+    }
+    if (temp > *max_var) {
+      *max_var = temp;
+    }
+  }
 }
 
 //void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag){
@@ -166,15 +191,15 @@ void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag)
 void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype){
   int i=0;
   // process the remaining data
+  unsigned short* in_short = reinterpret_cast<unsigned short*>(invec);
+  unsigned short* out_short = reinterpret_cast<unsigned short*>(inoutvec);
   for(; i < *len; i++){
-    float in_float;
-    float inout_float;
-    unsigned int tmp_in = (*reinterpret_cast<unsigned short*>(invec + i)) << 16;
-    unsigned int tmp_out = (*reinterpret_cast<unsigned short*>(inoutvec + i)) << 16;
-    in_float = *reinterpret_cast<float*>(&tmp_in);
-    inout_float = *reinterpret_cast<float*>(&tmp_out);
+    unsigned int tmp_in = (*(in_short + i)) << 16;
+    unsigned int tmp_out = (*(out_short + i)) << 16;
+    float in_float = *reinterpret_cast<float*>(&tmp_in);
+    float inout_float = *reinterpret_cast<float*>(&tmp_out);
     inout_float += in_float;
-    *(unsigned short*)(inoutvec + i) = *reinterpret_cast<unsigned int*>(&inout_float)>>16;
+    *(out_short + i) = (*reinterpret_cast<unsigned int*>(&inout_float))>>16;
   }
 }
 
