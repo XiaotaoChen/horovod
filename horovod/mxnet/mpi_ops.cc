@@ -57,46 +57,25 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
 //  auto hvd_tensor = std::make_shared<MXTensor<NDArray>>(tensor);
   auto hvd_tensor = std::make_shared<MXBF16Tensor<NDArray>>(tensor);
   auto hvd_context = std::make_shared<MXOpContext<NDArray>>(device, output);
-//  auto hvd_output = std::make_shared<MXTensor<NDArray>>(output);
   auto hvd_output = hvd_tensor;
   if (tensor->var() != output->var()){
     hvd_output = std::make_shared<MXBF16Tensor<NDArray>>(output);
+//    hvd_output = std::make_shared<MXTensor<NDArray>>(output);
   }
 
   auto enqueue_result = EnqueueTensorAllreduce(
       hvd_context, hvd_tensor, hvd_output, nullptr,
-      GetOpNameHandle("allreduce", "bf16_" + name, handle), device,
-      [handle, average, tensor, output, device, hvd_context, hvd_output, name, rank, count](const Status& status) {
-        // do fp32 allreduce to compare the result between fp32 and bf16.
-        auto hvd_tensor_source = std::make_shared<MXTensor<NDArray>>(tensor);
-        auto hvd_output_source = hvd_tensor_source;
-        if (tensor->var() != output->var()){
-          hvd_output_source = std::make_shared<MXTensor<NDArray>>(output);
-        }
-        auto enqueue_result_source = EnqueueTensorAllreduce(
-            hvd_context, hvd_tensor_source, hvd_output_source, nullptr,
-            GetOpNameHandle("allreduce", name, handle), device,
-            [handle, hvd_output, output, name, rank, count](const Status& status){
-              // when execute this callback, means the fp32 allreduce is finished. results are in
-              // hvd_output_source->data() or hvd_output->source_data()
-              // compare the result between fp32 and bf16
-              if(rank == 0){
-                const unsigned short* bf16_output = reinterpret_cast<const unsigned short*>(hvd_output->data());
-                const unsigned int* fp32_output = reinterpret_cast<const unsigned int*>(hvd_output->source_data());
-                float min_var = 100;
-                float max_var = -1.0;
-                int len = output->shape().Size();
-                cal_min_max_var(fp32_output, bf16_output, len, &min_var, &max_var);
-                printf("rank: %d, total_iters: %d, allreduce name: %s, size: %d, min_range: %f, max_range: %f\n",
-                       rank, count, name.c_str(), len, min_var, max_var);
-              }
-              handle_manager.MarkDone(handle, status);
-              handle_manager.ExecuteCallback(handle);
-            });
-        ThrowIfError(enqueue_result_source);
+      GetOpNameHandle("allreduce", name, handle), device,
+      [handle, average, output, hvd_output](const Status& status) {
+        // convert bf16_tensor to fp32, assign to output
+        BF16ToFloat(reinterpret_cast<const unsigned short*>(hvd_output->data()),
+                    reinterpret_cast<float*>(hvd_output->source_data()),
+                    output->shape().Size(),
+                    2);
+        handle_manager.MarkDone(handle, status);
+        handle_manager.ExecuteCallback(handle);
       });
   ThrowIfError(enqueue_result);
-
   return handle;
 }
 
