@@ -59,6 +59,8 @@ inline unsigned short* bf16_alloc(size_t size){
 
 bool check_equal(const unsigned int a, const unsigned short b);
 
+bool check_masked(float* src, int size);
+
 float cal_var_range(const unsigned int a, const unsigned short b);
 
 void cal_min_max_var(const unsigned int* fp32_p,
@@ -71,9 +73,11 @@ void BF16ToFloat(const unsigned short* src, float* dst, int len, int type_flag);
 
 void FloatToBF16(const float* src, unsigned short* dst, int len, int type_flag);
 
-void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag);
+void mask_fp32(float* fp, int size);
 
-void FloatToBFloat16(const float* src, unsigned short* dst, int64 size, int type_flag);
+void BFloat16ToFloat(const unsigned short* src, float* dst, int size, int type_flag);
+
+void FloatToBFloat16(const float* src, unsigned short* dst, int size, int type_flag);
 
 void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype);
 

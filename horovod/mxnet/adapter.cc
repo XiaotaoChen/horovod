@@ -58,6 +58,20 @@ MXPersistentBuffer::AccessData(std::shared_ptr<OpContext> context) const {
 
 template <class T> MXTensor<T>::MXTensor(T* tensor) : tensor_(tensor) {}
 
+template <> MXTensor<NDArray>::MXTensor(NDArray* tensor) : tensor_(tensor) {
+ // mask fp32 to bf16
+ // little-end set low 16bits to 0
+ float* p = tensor->data().dptr<float>();
+ int size = tensor->shape().Size();
+ mask_fp32(p, size);
+// bool flag = check_masked(p, size);
+// if(flag) {
+//   printf("mask fp32 to bf16 is correct! \n");
+// } else {
+//   printf("mask fp32 to bf16 is wrong! \n");
+// }
+}
+
 template <class T> const MPIDataType MXTensor<T>::dtype() const {
   return TensorUtil::GetDType(tensor_);
 }

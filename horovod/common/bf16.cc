@@ -9,6 +9,7 @@
 //#include <immintrin.h>
 #include <cmath>
 #include <stdio.h>
+#include <stdint.h>
 #include "bf16.h"
 
 namespace horovod {
@@ -174,22 +175,37 @@ void cal_min_max_var(const unsigned int* fp32_p,
 //  }
 //}
 
-void BF16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag){
+void BF16ToFloat(const unsigned short* src, float* dst, int size, int type_flag){
   unsigned int* dst_unsigned = reinterpret_cast<unsigned int*>(dst);
   for(int i=0; i < size; i++){
     *(dst_unsigned+i) = *(src+i)<<16;
   }
 }
 
-void FloatToBF16(const float* src, unsigned short* dst, int64 size, int type_flag){
+void FloatToBF16(const float* src, unsigned short* dst, int size, int type_flag){
   const unsigned int* src_unsigned = reinterpret_cast<const unsigned int*>(src);
   for(int i=0; i < size; i++){
     *(dst+i) = *(src_unsigned+i)>>16;
   }
 }
 
+bool check_masked(float* src, int size){
+  uint16_t* p = reinterpret_cast<uint16_t*>(src);
+  for(int i=0; i< size; i++, p+=2){
+    if (*p != 0) return false;
+  }
+  return true;
+}
+
+void mask_fp32(float* src, int size) {
+ uint16_t* p = reinterpret_cast<uint16_t*>(src);
+ for(int i=0; i< size; i++, p+=2){
+   *p = 0;
+ }
+}
+
 // ref to tensorflow implementation
-void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag) {
+void BFloat16ToFloat(const unsigned short* src, float* dst, int size, int type_flag) {
   const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
   uint16_t* q = reinterpret_cast<uint16_t*>(dst);
   for (; size != 0; p++, q += 2, size--) {
@@ -198,7 +214,7 @@ void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type
   }
 }
 
-void FloatToBFloat16(const float* src, unsigned short* dst, int64 size, int type_flag) {
+void FloatToBFloat16(const float* src, unsigned short* dst, int size, int type_flag) {
   const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
   uint16_t* q = reinterpret_cast<uint16_t*>(dst);
   for (; size != 0; p += 2, q++, size--) {
