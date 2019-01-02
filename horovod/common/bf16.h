@@ -67,9 +67,13 @@ void cal_min_max_var(const unsigned int* fp32_p,
                      float* min_var,
                      float* max_var);
 
-void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag);
+void BF16ToFloat(const unsigned short* src, float* dst, int len, int type_flag);
 
-void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag);
+void FloatToBF16(const float* src, unsigned short* dst, int len, int type_flag);
+
+void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag);
+
+void FloatToBFloat16(const float* src, unsigned short* dst, int64 size, int type_flag);
 
 void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype);
 

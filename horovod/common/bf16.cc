@@ -174,17 +174,35 @@ void cal_min_max_var(const unsigned int* fp32_p,
 //  }
 //}
 
-void BF16ToFloat(const unsigned short* src, float* dest, int len, int type_flag){
-  unsigned int* dest_unsigned = reinterpret_cast<unsigned int*>(dest);
-  for(int i=0; i < len; i++){
-    *(dest_unsigned+i) = *(src+i)<<16;
+void BF16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag){
+  unsigned int* dst_unsigned = reinterpret_cast<unsigned int*>(dst);
+  for(int i=0; i < size; i++){
+    *(dst_unsigned+i) = *(src+i)<<16;
   }
 }
 
-void FloatToBF16(const float* src, unsigned short* dest, int len, int type_flag){
+void FloatToBF16(const float* src, unsigned short* dst, int64 size, int type_flag){
   const unsigned int* src_unsigned = reinterpret_cast<const unsigned int*>(src);
-  for(int i=0; i < len; i++){
-    *(dest+i) = *(src_unsigned+i)>>16;
+  for(int i=0; i < size; i++){
+    *(dst+i) = *(src_unsigned+i)>>16;
+  }
+}
+
+// ref to tensorflow implementation
+void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag) {
+  const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
+  uint16_t* q = reinterpret_cast<uint16_t*>(dst);
+  for (; size != 0; p++, q += 2, size--) {
+    q[0] = 0;
+    q[1] = *p;
+  }
+}
+
+void FloatToBFloat16(const float* src, unsigned short* dst, int64 size, int type_flag) {
+  const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
+  uint16_t* q = reinterpret_cast<uint16_t*>(dst);
+  for (; size != 0; p += 2, q++, size--) {
+    *q = p[1];
   }
 }
 
