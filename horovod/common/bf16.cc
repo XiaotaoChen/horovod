@@ -15,12 +15,12 @@ namespace horovod {
 namespace common {
 
 
-bool check_equal(const unsigned int a, const unsigned short b){
-  unsigned short short_a = a>>16;
+bool check_equal(const unsigned int a, const uint16_t b){
+  uint16_t short_a = a>>16;
   return short_a == b;
 }
 
-float cal_var_range(const unsigned int a, const unsigned short b){
+float cal_var_range(const unsigned int a, const uint16_t b){
   const float* fp_a = reinterpret_cast<const float*>(&a);
   const unsigned int int_b = b<<16;
   const float* fp_b = reinterpret_cast<const float*>(&int_b);
@@ -36,7 +36,7 @@ float cal_var_range(const unsigned int a, const unsigned short b){
 }
 
 void cal_min_max_var(const unsigned int* fp32_p,
-                     const unsigned short* bf16_p,
+                     const uint16_t* bf16_p,
                      int len,
                      float* min_var,
                      float* max_var){
@@ -174,14 +174,14 @@ void cal_min_max_var(const unsigned int* fp32_p,
 //  }
 //}
 
-void BF16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag){
+void BF16ToFloat(const uint16_t* src, float* dst, int size, int type_flag){
   unsigned int* dst_unsigned = reinterpret_cast<unsigned int*>(dst);
   for(int i=0; i < size; i++){
     *(dst_unsigned+i) = *(src+i)<<16;
   }
 }
 
-void FloatToBF16(const float* src, unsigned short* dst, int64 size, int type_flag){
+void FloatToBF16(const float* src, uint16_t* dst, int size, int type_flag){
   const unsigned int* src_unsigned = reinterpret_cast<const unsigned int*>(src);
   for(int i=0; i < size; i++){
     *(dst+i) = *(src_unsigned+i)>>16;
@@ -189,8 +189,8 @@ void FloatToBF16(const float* src, unsigned short* dst, int64 size, int type_fla
 }
 
 // ref to tensorflow implementation
-void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag) {
-  const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
+void BFloat16ToFloat(const uint16_t* src, float* dst, int size, int type_flag) {
+  const uint16_t* p = src;
   uint16_t* q = reinterpret_cast<uint16_t*>(dst);
   for (; size != 0; p++, q += 2, size--) {
     q[0] = 0;
@@ -198,9 +198,9 @@ void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type
   }
 }
 
-void FloatToBFloat16(const float* src, unsigned short* dst, int64 size, int type_flag) {
+void FloatToBFloat16(const float* src, uint16_t* dst, int size, int type_flag) {
   const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
-  uint16_t* q = reinterpret_cast<uint16_t*>(dst);
+  uint16_t* q = dst;
   for (; size != 0; p += 2, q++, size--) {
     *q = p[1];
   }
@@ -209,8 +209,8 @@ void FloatToBFloat16(const float* src, unsigned short* dst, int64 size, int type
 void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype){
   int i=0;
   // process the remaining data
-  unsigned short* in_short = reinterpret_cast<unsigned short*>(invec);
-  unsigned short* out_short = reinterpret_cast<unsigned short*>(inoutvec);
+  uint16_t* in_short = reinterpret_cast<uint16_t*>(invec);
+  uint16_t* out_short = reinterpret_cast<uint16_t*>(inoutvec);
   for(; i < *len; i++){
     unsigned int tmp_in = (*(in_short + i)) << 16;
     unsigned int tmp_out = (*(out_short + i)) << 16;

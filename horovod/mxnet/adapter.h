@@ -71,7 +71,7 @@ public:
   ~MXBF16Tensor();
 
 private:
-  unsigned short* bf16dptr_;
+  uint16_t* bf16dptr_;
 };
 
 

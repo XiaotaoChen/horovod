@@ -125,7 +125,7 @@ void ThrowIfError(Status status) {
 
 template <> MXBF16Tensor<NDArray>::MXBF16Tensor(NDArray* tensor) : MXTensor<NDArray>(tensor) {
   int len = tensor->shape().Size();
-  size_t bf16_size = len * sizeof(unsigned short);
+  size_t bf16_size = len * sizeof(uint16_t);
   // create bf16 tensor from tensor
   this->bf16dptr_ = bf16_alloc(bf16_size);
 //  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, 2);
@@ -133,7 +133,7 @@ template <> MXBF16Tensor<NDArray>::MXBF16Tensor(NDArray* tensor) : MXTensor<NDAr
   // to check equal
   const unsigned int* src_p = reinterpret_cast<const unsigned int*>
                               (tensor->data().dptr<float>());
-  const unsigned short* dst_p = reinterpret_cast<const unsigned short*>(this->bf16dptr_);
+  const unsigned short* dst_p = reinterpret_cast<const uint16_t*>(this->bf16dptr_);
   for(int i=0; i < len; i++){
     if(!check_equal(src_p[i], dst_p[i])){
       printf("float to bf16, check equal error: %d, %x, %x\n",
@@ -151,7 +151,7 @@ template <> const void* MXBF16Tensor<NDArray>::data() const {
 }
 
 template <> int64_t MXBF16Tensor<NDArray>::size() const {
-  return (int64_t)(this->tensor_->shape().Size()) * sizeof(unsigned short);
+  return (int64_t)(this->tensor_->shape().Size()) * sizeof(uint16_t);
 }
 
 template<> void* MXBF16Tensor<NDArray>::source_data() {

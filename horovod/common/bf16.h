@@ -12,21 +12,22 @@
 //#include <immintrin.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <cstdint>
 #define OMPI_SKIP_MPICXX
 #include "mpi.h"
 
 namespace horovod {
 namespace common {
 
-inline unsigned short* bf16_alloc(size_t size){
+inline uint16_t* bf16_alloc(size_t size){
   // TODO set alignment to 256/512, it's performance may be better.
   //size must be an integral multiple of 64.
   if (size % 64 == 0) {
-    return reinterpret_cast<unsigned short*>(aligned_alloc(64, size));
+    return reinterpret_cast<uint16_t*>(aligned_alloc(64, size));
   }
   else {
     size_t new_size = (size / 64 + 1 ) * 64;
-    return reinterpret_cast<unsigned short*>(aligned_alloc(64, new_size));
+    return reinterpret_cast<uint16_t*>(aligned_alloc(64, new_size));
   }
 }
 
@@ -57,23 +58,23 @@ inline unsigned short* bf16_alloc(size_t size){
 //    *dst1 = _mm256_unpackhi_epi16(zeros, src);
 //}
 
-bool check_equal(const unsigned int a, const unsigned short b);
+bool check_equal(const unsigned int a, const uint16_t b);
 
-float cal_var_range(const unsigned int a, const unsigned short b);
+float cal_var_range(const unsigned int a, const uint16_t b);
 
 void cal_min_max_var(const unsigned int* fp32_p,
-                     const unsigned short* bf16_p,
+                     const uint16_t* bf16_p,
                      int len,
                      float* min_var,
                      float* max_var);
 
-void BF16ToFloat(const unsigned short* src, float* dst, int len, int type_flag);
+void BF16ToFloat(const uint16_t* src, float* dst, int len, int type_flag);
 
-void FloatToBF16(const float* src, unsigned short* dst, int len, int type_flag);
+void FloatToBF16(const float* src, uint16_t* dst, int len, int type_flag);
 
-void BFloat16ToFloat(const unsigned short* src, float* dst, int64 size, int type_flag);
+void BFloat16ToFloat(const uint16_t* src, float* dst, int size, int type_flag);
 
-void FloatToBFloat16(const float* src, unsigned short* dst, int64 size, int type_flag);
+void FloatToBFloat16(const float* src, uint16_t* dst, int size, int type_flag);
 
 void bf16_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype);
 
