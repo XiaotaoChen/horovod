@@ -30,32 +30,32 @@ inline uint16_t* bf16_alloc(size_t size){
   }
 }
 
-inline void convert_f32_to_b16(__m512i src, __m256i* dst)
-{
-  __m512i y = _mm512_bsrli_epi128(src, 2);
-  *dst = _mm512_cvtepi32_epi16(y);
-}
-
-inline void convert_b16_to_f32(__m256i src, __m512i* dst)
-{
-  __m512i y = _mm512_cvtepu16_epi32(src);
-  *dst = _mm512_bslli_epi128(y, 2);
-}
-
-inline void convert_f32_to_b16(__m256i src0, __m256i src1, __m256i *dst)
-{
-    src0 = _mm256_srli_epi32(src0, 16);
-    src1 = _mm256_srli_epi32(src1, 16);
-    *dst = _mm256_packus_epi32(src0, src1);
-}
-
-inline void convert_b16_to_f32(__m256i src, __m256i *dst0, __m256i *dst1)
-{
-    int zero[8] = {0,0,0,0,0,0,0,0};
-    __m256i zeros = *(__m256i*)zero;
-    *dst0 = _mm256_unpacklo_epi16(zeros, src);
-    *dst1 = _mm256_unpackhi_epi16(zeros, src);
-}
+//inline void convert_f32_to_b16(__m512i src, __m256i* dst)
+//{
+//  __m512i y = _mm512_bsrli_epi128(src, 2);
+//  *dst = _mm512_cvtepi32_epi16(y);
+//}
+//
+//inline void convert_b16_to_f32(__m256i src, __m512i* dst)
+//{
+//  __m512i y = _mm512_cvtepu16_epi32(src);
+//  *dst = _mm512_bslli_epi128(y, 2);
+//}
+//
+//inline void convert_f32_to_b16(__m256i src0, __m256i src1, __m256i *dst)
+//{
+//    src0 = _mm256_srli_epi32(src0, 16);
+//    src1 = _mm256_srli_epi32(src1, 16);
+//    *dst = _mm256_packus_epi32(src0, src1);
+//}
+//
+//inline void convert_b16_to_f32(__m256i src, __m256i *dst0, __m256i *dst1)
+//{
+//    int zero[8] = {0,0,0,0,0,0,0,0};
+//    __m256i zeros = *(__m256i*)zero;
+//    *dst0 = _mm256_unpacklo_epi16(zeros, src);
+//    *dst1 = _mm256_unpackhi_epi16(zeros, src);
+//}
 
 bool check_equal(const unsigned int a, const uint16_t b);
 
