@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "../common/bf16.h"
+#include "../common/half.h"
 #include "../common/operations.h"
 #include "adapter.h"
 #include "cuda_util.h"
@@ -54,24 +55,24 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
 
   auto handle = handle_manager.AllocateHandle(cb);
   auto device = TensorUtil::GetDevice(tensor);
-//  auto hvd_tensor = std::make_shared<MXTensor<NDArray>>(tensor);
-  auto hvd_tensor = std::make_shared<MXBF16Tensor<NDArray>>(tensor);
+  auto hvd_tensor = std::make_shared<MXFP16Tensor<NDArray>>(tensor);
   auto hvd_context = std::make_shared<MXOpContext<NDArray>>(device, output);
   auto hvd_output = hvd_tensor;
   if (tensor->var() != output->var()){
-    hvd_output = std::make_shared<MXBF16Tensor<NDArray>>(output);
-//    hvd_output = std::make_shared<MXTensor<NDArray>>(output);
+    hvd_output = std::make_shared<MXFP16Tensor<NDArray>>(output);
   }
 
   auto enqueue_result = EnqueueTensorAllreduce(
       hvd_context, hvd_tensor, hvd_output, nullptr,
       GetOpNameHandle("allreduce", name, handle), device,
       [handle, average, output, hvd_output](const Status& status) {
-        // convert bf16_tensor to fp32, assign to output
-        BF16ToFloat(reinterpret_cast<const uint16_t*>(hvd_output->data()),
-                    reinterpret_cast<float*>(hvd_output->source_data()),
-                    output->shape().Size(),
-                    2);
+        // convert fp16 tensor to fp32 assign to output
+        int len = output->shape().Size();
+        float* dst = reinterpret_cast<float*>(hvd_output->source_data());
+        unsigned short* src = reinterpret_cast<unsigned short*>(hvd_output->get_fp16ptr());
+        for(int i=0; i < len; i++){
+          HalfBits2Float(src+i, dst+i);
+        }
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
       });

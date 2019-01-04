@@ -23,6 +23,7 @@
 #include "cuda_util.h"
 #include "tensor_util.h"
 #include "../common/bf16.h"
+#include "../common/half.h"
 
 namespace horovod {
 namespace mxnet {
@@ -162,9 +163,45 @@ template <> MXBF16Tensor<NDArray>::~MXBF16Tensor(){
   free(this->bf16dptr_);
 }
 
+template <> MXFP16Tensor<NDArray>::MXFP16Tensor(NDArray* tensor) : MXTensor<NDArray>(tensor) {
+  int len = tensor->shape().Size();
+  size_t fp16_size = len * sizeof(unsigned short);
+  // create bf16 tensor from tensor
+  this->fp16dptr_ = bf16_alloc(fp16_size);
+
+  float* src = reinterpret_cast<float*>(tensor->data().dptr<float>());
+  for(int i=0; i < len; i++){
+    Float2HalfBits(src+i, this->fp16dptr_+i);
+  }
+}
+
+template <> const MPIDataType MXFP16Tensor<NDArray>::dtype() const {
+  return MPIDataType::HOROVOD_FLOAT16;
+}
+
+template <> const void* MXFP16Tensor<NDArray>::data() const {
+  return reinterpret_cast<void*>(this->fp16dptr_);
+}
+
+template <> int64_t MXFP16Tensor<NDArray>::size() const {
+  return (int64_t)(this->tensor_->shape().Size()) * sizeof(uint16_t);
+}
+
+template<> void* MXFP16Tensor<NDArray>::source_data() {
+  return const_cast<void*>(MXTensor<NDArray>::data());
+}
+
+template <> unsigned short* MXFP16Tensor<NDArray>::get_fp16ptr() {
+  return this->fp16dptr_;
+}
+
+template <> MXFP16Tensor<NDArray>::~MXFP16Tensor(){
+  free(this->fp16dptr_);
+}
 template class MXTensor<NDArray>;
 template class MXOpContext<NDArray>;
 template class MXBF16Tensor<NDArray>;
+template class MXFP16Tensor<NDArray>;
 
 } // namespace mxnet
 } // namespace horovod

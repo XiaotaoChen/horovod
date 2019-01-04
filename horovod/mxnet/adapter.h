@@ -74,6 +74,19 @@ private:
   uint16_t* bf16dptr_;
 };
 
+template <class T> class MXFP16Tensor : public MXTensor<T> {
+public:
+  MXFP16Tensor(T* tensor);
+  virtual const MPIDataType dtype() const override;
+  virtual const void* data() const override;
+  virtual int64_t size() const override;
+  uint16_t* get_fp16ptr();
+  void* source_data();
+  ~MXFP16Tensor();
+
+private:
+  uint16_t* fp16dptr_;
+};
 
 void ThrowIfError(Status status);
 
