@@ -69,10 +69,9 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
         // convert fp16 tensor to fp32 assign to output
         int len = output->shape().Size();
         float* dst = reinterpret_cast<float*>(hvd_output->source_data());
-        unsigned short* src = reinterpret_cast<unsigned short*>(hvd_output->get_fp16ptr());
-        for(int i=0; i < len; i++){
-          HalfBits2Float(src+i, dst+i);
-        }
+        const uint16_t* src = reinterpret_cast<const uint16_t*>(hvd_output->data());
+        FP16ToFP32(src, dst, len, 0);
+
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
       });

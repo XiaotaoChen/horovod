@@ -26,13 +26,43 @@
 #ifndef HOROVOD_HALF_H
 #define HOROVOD_HALF_H
 
-#include <stdint.h>
+#include <stdint.h>  // uint16_t
+#include <immintrin.h>
 
 #define OMPI_SKIP_MPICXX
 #include "mpi.h"
 
 namespace horovod {
 namespace common {
+
+inline void convert_f32_to_f16(__m512 src, __m256i* dst) {
+  // round to nearest, and suppress exceptions
+  *dst = _mm512_cvtps_ph(src, _MM_FROUND_TO_NEAREST_INT);
+}
+
+inline void convert_f32_to_f16(__m256 src, __m128i* dst) {
+  // round to nearest, and suppress exceptions
+  *dst = _mm256_cvtps_ph(src, _MM_FROUND_TO_NEAREST_INT);
+}
+
+inline void convert_f32_to_f16(float src, unsigned short* dst) {
+  *dst = _cvtss_sh(src, 0);
+}
+
+inline void convert_f16_to_f32(__m256i src, __m512* dst) {
+  *dst = _mm512_cvtph_ps(src);
+}
+
+inline void convert_f16_to_f32(__m128i src, __m256* dst) {
+  *dst = _mm256_cvtph_ps(src);
+}
+
+inline void convert_f16_to_f32(unsigned short src, float* dst) {
+  *dst = _cvtsh_ss(src);
+}
+void FP32ToFP16(const float* src, uint16_t* dst, int len, int type_flag);
+
+void FP16ToFP32(const uint16_t* src, float* dst, int len, int type_flag);
 
 inline void HalfBits2Float(unsigned short* src, float* res) {
   unsigned h = *src;

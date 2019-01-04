@@ -15,7 +15,6 @@
 
 #if __AVX__ && __F16C__
 #include <cpuid.h>
-#include <immintrin.h>
 #endif
 
 #include "half.h"
@@ -38,6 +37,80 @@ bool is_avx_and_f16c() {
   return result;
 }
 #endif
+
+void FP32ToFP16(const float* src, uint16_t* dst, int len, int type_flag){
+  switch(type_flag)
+  {
+    case 0:
+      {
+        int i=0;
+        for(; i < (len / 16) * 16; i += 16){
+          convert_f32_to_f16(*(__m512*)(src+i), (__m256i*)(dst+i));
+        }
+        // process the remaining data
+        for(; i < len; i++){
+          convert_f32_to_f16(*(src+i), (unsigned short*)(dst+i));
+        }
+      }
+      break;
+    case 1:
+      {
+        int i=0;
+        for(; i < (len / 8) * 8; i += 8){
+          convert_f32_to_f16(*(__m256*)(src+i), (__m128i*)(dst+i));
+        }
+        // process the remaining data
+        for(; i < len; i++){
+          convert_f32_to_f16(*(src+i), (unsigned short*)(dst+i));
+        }
+      }
+      break;
+    default:
+      {
+        for(int i=0; i < len; i++){
+          convert_f32_to_f16(*(src+i), (unsigned short*)(dst+i));
+        }
+      }
+      break;
+  }
+}
+
+void FP16ToFP32(const uint16_t* src, float* dst, int len, int type_flag){
+  switch(type_flag)
+  {
+    case 0:
+      {
+        int i=0;
+        for(; i < (len / 16) * 16; i += 16) {
+          convert_f16_to_f32(*(__m256i*)(src+i), (__m512*)(dst+i));
+        }
+        // process the remaining data
+        for(; i < len; i++) {
+          convert_f16_to_f32(*(unsigned short*)(src+i), (float*)(dst+i));
+        }
+      }
+      break;
+    case 1:
+      {
+        int i=0;
+        for(; i < (len / 8) * 8; i += 8) {
+          convert_f16_to_f32(*(__m128i*)(src+i), (__m256*)(dst+i));
+        }
+        // process the remaining data
+        for(; i < len; i++) {
+          convert_f16_to_f32(*(unsigned short*)(src+i), (float*)(dst+i));
+        }
+      }
+      break;
+    default:
+      {
+        for(int i=0; i < len; i++) {
+          convert_f16_to_f32(*(unsigned short*)(src+i), (float*)(dst+i));
+        }
+      }
+      break;
+  }
+}
 
 // float16 custom data type summation operation.
 void float16_sum(void* invec, void* inoutvec, int* len,

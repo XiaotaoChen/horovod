@@ -166,13 +166,12 @@ template <> MXBF16Tensor<NDArray>::~MXBF16Tensor(){
 template <> MXFP16Tensor<NDArray>::MXFP16Tensor(NDArray* tensor) : MXTensor<NDArray>(tensor) {
   int len = tensor->shape().Size();
   size_t fp16_size = len * sizeof(unsigned short);
-  // create bf16 tensor from tensor
+  // create fp16 tensor from tensor
   this->fp16dptr_ = bf16_alloc(fp16_size);
 
   float* src = reinterpret_cast<float*>(tensor->data().dptr<float>());
-  for(int i=0; i < len; i++){
-    Float2HalfBits(src+i, this->fp16dptr_+i);
-  }
+  // convert fp32 to fp16
+  FP32ToFP16(src, this->fp16dptr_, len, 0);
 }
 
 template <> const MPIDataType MXFP16Tensor<NDArray>::dtype() const {
@@ -180,7 +179,7 @@ template <> const MPIDataType MXFP16Tensor<NDArray>::dtype() const {
 }
 
 template <> const void* MXFP16Tensor<NDArray>::data() const {
-  return reinterpret_cast<void*>(this->fp16dptr_);
+  return reinterpret_cast<const void*>(this->fp16dptr_);
 }
 
 template <> int64_t MXFP16Tensor<NDArray>::size() const {
@@ -189,10 +188,6 @@ template <> int64_t MXFP16Tensor<NDArray>::size() const {
 
 template<> void* MXFP16Tensor<NDArray>::source_data() {
   return const_cast<void*>(MXTensor<NDArray>::data());
-}
-
-template <> unsigned short* MXFP16Tensor<NDArray>::get_fp16ptr() {
-  return this->fp16dptr_;
 }
 
 template <> MXFP16Tensor<NDArray>::~MXFP16Tensor(){

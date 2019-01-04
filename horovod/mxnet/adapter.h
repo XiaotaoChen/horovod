@@ -80,7 +80,6 @@ public:
   virtual const MPIDataType dtype() const override;
   virtual const void* data() const override;
   virtual int64_t size() const override;
-  uint16_t* get_fp16ptr();
   void* source_data();
   ~MXFP16Tensor();
 
