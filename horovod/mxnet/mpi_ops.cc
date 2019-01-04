@@ -71,7 +71,7 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
         BF16ToFloat(reinterpret_cast<const uint16_t*>(hvd_output->data()),
                     reinterpret_cast<float*>(hvd_output->source_data()),
                     output->shape().Size(),
-                    2);
+                    0);
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
       });

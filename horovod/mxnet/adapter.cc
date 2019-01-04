@@ -128,18 +128,17 @@ template <> MXBF16Tensor<NDArray>::MXBF16Tensor(NDArray* tensor) : MXTensor<NDAr
   size_t bf16_size = len * sizeof(uint16_t);
   // create bf16 tensor from tensor
   this->bf16dptr_ = bf16_alloc(bf16_size);
-//  FloatToBF16(reinterpret_cast<const float*>(TensorUtil::GetData(tensor)), this->bf16dptr_, len, 2);
   FloatToBF16(reinterpret_cast<const float*>(tensor->data().dptr<float>()), this->bf16dptr_, len, 0);
-  // to check equal
-  const unsigned int* src_p = reinterpret_cast<const unsigned int*>
-                              (tensor->data().dptr<float>());
-  const unsigned short* dst_p = reinterpret_cast<const uint16_t*>(this->bf16dptr_);
-  for(int i=0; i < len; i++){
-    if(!check_equal(src_p[i], dst_p[i])){
-      printf("float to bf16, check equal error: %d, %x, %x\n",
-              i, src_p[i], dst_p[i]);
-    }
-  }
+//  // to check equal
+//  const unsigned int* src_p = reinterpret_cast<const unsigned int*>
+//                              (tensor->data().dptr<float>());
+//  const unsigned short* dst_p = reinterpret_cast<const uint16_t*>(this->bf16dptr_);
+//  for(int i=0; i < len; i++){
+//    if(!check_equal(src_p[i], dst_p[i])){
+//      printf("float to bf16, check equal error: %d, %x, %x\n",
+//              i, src_p[i], dst_p[i]);
+//    }
+//  }
 }
 
 template <> const MPIDataType MXBF16Tensor<NDArray>::dtype() const {
