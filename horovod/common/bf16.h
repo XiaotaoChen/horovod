@@ -75,6 +75,8 @@ void FloatToBF16(const float* src, unsigned short* dst, int len, int type_flag);
 
 void mask_fp32(float* fp, int size);
 
+void mask_fp32(float* src, int size, int low_bits);
+
 void BFloat16ToFloat(const unsigned short* src, float* dst, int size, int type_flag);
 
 void FloatToBFloat16(const float* src, unsigned short* dst, int size, int type_flag);

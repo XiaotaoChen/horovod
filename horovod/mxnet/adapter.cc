@@ -63,7 +63,8 @@ template <> MXTensor<NDArray>::MXTensor(NDArray* tensor) : tensor_(tensor) {
  // little-end set low 16bits to 0
  float* p = tensor->data().dptr<float>();
  int size = tensor->shape().Size();
- mask_fp32(p, size);
+ // mask low 21 bits mantissa to simulate 11 bits: [1-sign, 8-exponents, 2-mantissa]
+ mask_fp32(p, size, 21);
 // bool flag = check_masked(p, size);
 // if(flag) {
 //   printf("mask fp32 to bf16 is correct! \n");

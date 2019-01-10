@@ -204,6 +204,17 @@ void mask_fp32(float* src, int size) {
  }
 }
 
+void mask_fp32(float* src, int size, int low_bits) {
+ unsigned int mask_code = 0xffffffff;
+ for(int i = 0; i < low_bits; i++) {
+   mask_code &= ~(1U << i);
+ }
+ unsigned int* p = reinterpret_cast<unsigned int*>(src);
+ for(int i=0; i< size; i++, p+=1){
+   *p = (*p) & mask_code;
+ }
+}
+
 // ref to tensorflow implementation
 void BFloat16ToFloat(const unsigned short* src, float* dst, int size, int type_flag) {
   const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
