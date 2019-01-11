@@ -53,6 +53,9 @@ const std::string& MPIDataType_Name(MPIDataType value) {
   case HOROVOD_BOOL:
     static const std::string bool_("bool");
     return bool_;
+  case HOROVOD_QUANTIZED_UINT8:
+    static const std::string quantized_uint8("quantized_uint8");
+    return quantized_uint8;
   default:
     static const std::string unknown("<unknown>");
     return unknown;

@@ -23,6 +23,7 @@
 #include "cuda_util.h"
 #include "tensor_util.h"
 #include "../common/bf16.h"
+#include "../common/quantize_uint8.h"
 
 namespace horovod {
 namespace mxnet {
@@ -177,9 +178,37 @@ template <> MXBF16Tensor<NDArray>::~MXBF16Tensor(){
   free(this->bf16dptr_);
 }
 
+// quantize uint8
+template <> MXUINT8Tensor<NDArray>::MXUINT8Tensor(NDArray* tensor) : MXTensor<NDArray>(tensor) {
+  int len = tensor->shape().Size();
+  // create uint8 tensor from tensor
+  this->uint8dptr_ = reinterpret_cast<uint8_t*>(alloc_mem(len * sizeof(uint8_t) + 2 * sizeof(float), 16));
+  quantize(reinterpret_cast<const float*>(tensor->data().dptr<float>()), this->uint8dptr_, len);
+}
+
+template <> const MPIDataType MXUINT8Tensor<NDArray>::dtype() const {
+  return MPIDataType::HOROVOD_QUANTIZED_UINT8;
+}
+
+template <> const void* MXUINT8Tensor<NDArray>::data() const {
+  return reinterpret_cast<void*>(this->uint8dptr_);
+}
+
+template <> int64_t MXUINT8Tensor<NDArray>::size() const {
+  return (int64_t)(this->tensor_->shape().Size()) * sizeof(uint8_t);
+}
+
+template<> void* MXUINT8Tensor<NDArray>::source_data() {
+  return const_cast<void*>(MXTensor<NDArray>::data());
+}
+
+template <> MXUINT8Tensor<NDArray>::~MXUINT8Tensor(){
+  free_mem(this->uint8dptr_);
+}
+
 template class MXTensor<NDArray>;
 template class MXOpContext<NDArray>;
 template class MXBF16Tensor<NDArray>;
-
+template class MXUINT8Tensor<NDArray>;
 } // namespace mxnet
 } // namespace horovod

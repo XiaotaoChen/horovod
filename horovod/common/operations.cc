@@ -43,6 +43,7 @@
 #include "operations.h"
 #include "timeline.h"
 #include "bf16.h"
+#include "quantize_uint8.h"
 
 /*
  * Allreduce, Allgather and Broadcast Ops.
@@ -191,6 +192,10 @@ struct HorovodGlobalState {
   // MPI custom data type for bf16.
   MPI_Datatype mpi_bf16_t;
   MPI_Op mpi_bf16_sum;
+
+  // MPI custom data type for quantized_uint8
+  MPI_Datatype mpi_quantized_uint8_t;
+  MPI_Op mpi_quantized_uint8_sum;
 
   // Private MPI communicator for Horovod to ensure no collisions with other
   // threads using MPI.
@@ -545,6 +550,8 @@ MPI_Datatype GetMPIDataType(const std::shared_ptr<Tensor> tensor) {
     return MPI_C_BOOL;
   case HOROVOD_BF16:
     return horovod_global.mpi_bf16_t;
+  case HOROVOD_QUANTIZED_UINT8:
+    return horovod_global.mpi_quantized_uint8_t;
   default:
     throw std::logic_error("Type " + MPIDataType_Name(tensor->dtype()) +
                            " is not supported in MPI mode.");
@@ -1149,6 +1156,8 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
             sum_op = horovod_global.mpi_float16_sum;
           } else if (first_entry.tensor->dtype() == HOROVOD_BF16) {
             sum_op = horovod_global.mpi_bf16_sum;
+          } else if (first_entry.tensor->dtype() == HOROVOD_QUANTIZED_UINT8) {
+            sum_op = horovod_global.mpi_quantized_uint8_sum;
           } else {
             sum_op = MPI_SUM;
           }
@@ -1293,6 +1302,8 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
         sum_op = horovod_global.mpi_float16_sum;
       } else if (first_entry.tensor->dtype() == HOROVOD_BF16) {
         sum_op = horovod_global.mpi_bf16_sum;
+      } else if (first_entry.tensor->dtype() == HOROVOD_QUANTIZED_UINT8) {
+            sum_op = horovod_global.mpi_quantized_uint8_sum;
       } else {
         sum_op = MPI_SUM;
       }
@@ -1346,6 +1357,8 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
         sum_op = horovod_global.mpi_float16_sum;
       } else if (first_entry.tensor->dtype() == HOROVOD_BF16) {
         sum_op = horovod_global.mpi_bf16_sum;
+      } else if (first_entry.tensor->dtype() == HOROVOD_QUANTIZED_UINT8) {
+            sum_op = horovod_global.mpi_quantized_uint8_sum;
       } else {
         sum_op = MPI_SUM;
       }
@@ -1580,6 +1593,14 @@ void BackgroundThreadLoop(HorovodGlobalState& state) {
   MPI_Op mpi_bf16_sum;
   MPI_Op_create(&bf16_sum, 1, &mpi_bf16_sum);
 
+  // create custom MPI quantized_uint8 data type.
+  MPI_Datatype mpi_quantized_uint8_t;
+  MPI_Type_contiguous(1, MPI_BYTE, &mpi_quantized_uint8_t);
+  MPI_Type_commit(&mpi_quantized_uint8_t);
+  // create custom MPI quantized_uint8 summation op.
+  MPI_Op mpi_quantized_uint8_sum;
+  MPI_Op_create(&quantize_sum, 1, &mpi_quantized_uint8_sum);
+
   state.rank = rank;
   state.local_rank = local_rank;
   state.cross_rank = cross_rank;
@@ -1595,6 +1616,9 @@ void BackgroundThreadLoop(HorovodGlobalState& state) {
 
   state.mpi_bf16_t = mpi_bf16_t;
   state.mpi_bf16_sum = mpi_bf16_sum;
+
+  state.mpi_quantized_uint8_t = mpi_quantized_uint8_t;
+  state.mpi_quantized_uint8_sum = mpi_quantized_uint8_sum;
 
   // Open the timeline file on coordinator.
   auto horovod_timeline = std::getenv(HOROVOD_TIMELINE);
@@ -1948,6 +1972,7 @@ bool RunLoopOnce(HorovodGlobalState& state, bool is_coordinator) {
   return !should_shut_down;
   MPI_Op_free(&state.mpi_float16_sum);
   MPI_Op_free(&state.mpi_bf16_sum);
+  MPI_Op_free(&state.mpi_quantized_uint8_sum);
 }
 
 // Start Horovod background thread. Ensure that this is
@@ -2020,6 +2045,10 @@ void horovod_shutdown() {
 
   if (horovod_global.mpi_bf16_t != MPI_DATATYPE_NULL) {
     MPI_Type_free(&horovod_global.mpi_bf16_t);
+  }
+
+  if (horovod_global.mpi_quantized_uint8_t != MPI_DATATYPE_NULL) {
+    MPI_Type_free(&horovod_global.mpi_quantized_uint8_t);
   }
 
   if (horovod_global.should_finalize) {

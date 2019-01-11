@@ -491,7 +491,8 @@ def get_common_options(build_ext):
                'horovod/common/half.cc',
                'horovod/common/operations.cc',
                'horovod/common/timeline.cc',
-               'horovod/common/bf16.cc']
+               'horovod/common/bf16.cc',
+               'horovod/common/quantize_uint8.cc']
     COMPILE_FLAGS = cpp_flags + shlex.split(mpi_flags)
     LINK_FLAGS = link_flags + shlex.split(mpi_flags)
     LIBRARY_DIRS = []

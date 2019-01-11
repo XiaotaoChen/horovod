@@ -16,6 +16,7 @@
 #ifndef HOROVOD_MXNET_ADAPTER_H
 #define HOROVOD_MXNET_ADAPTER_H
 
+#include <stdint.h> //uint8_t
 #include "../common/common.h"
 
 namespace horovod {
@@ -74,6 +75,18 @@ private:
   unsigned short* bf16dptr_;
 };
 
+template <class T> class MXUINT8Tensor : public MXTensor<T> {
+public:
+  MXUINT8Tensor(T* tensor);
+  virtual const MPIDataType dtype() const override;
+  virtual const void* data() const override;
+  virtual int64_t size() const override;
+  void* source_data();
+  ~MXUINT8Tensor();
+
+private:
+  uint8_t* uint8dptr_;
+};
 
 void ThrowIfError(Status status);
 

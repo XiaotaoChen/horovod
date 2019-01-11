@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "../common/bf16.h"
+#include "../common/quantize_uint8.h"
 #include "../common/operations.h"
 #include "adapter.h"
 #include "cuda_util.h"
@@ -54,13 +55,15 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
 
   auto handle = handle_manager.AllocateHandle(cb);
   auto device = TensorUtil::GetDevice(tensor);
-  auto hvd_tensor = std::make_shared<MXTensor<NDArray>>(tensor);
+//  auto hvd_tensor = std::make_shared<MXTensor<NDArray>>(tensor);
 //  auto hvd_tensor = std::make_shared<MXBF16Tensor<NDArray>>(tensor);
+  auto hvd_tensor = std::make_shared<MXUINT8Tensor<NDArray>>(tensor);
   auto hvd_context = std::make_shared<MXOpContext<NDArray>>(device, output);
   auto hvd_output = hvd_tensor;
   if (tensor->var() != output->var()){
 //    hvd_output = std::make_shared<MXBF16Tensor<NDArray>>(output);
-    hvd_output = std::make_shared<MXTensor<NDArray>>(output);
+//    hvd_output = std::make_shared<MXTensor<NDArray>>(output);
+    hvd_output = std::make_shared<MXUINT8Tensor<NDArray>>(output);
   }
 
   auto enqueue_result = EnqueueTensorAllreduce(
@@ -72,6 +75,11 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
 //                    reinterpret_cast<float*>(hvd_output->source_data()),
 //                    output->shape().Size(),
 //                    2);
+        // dequantize
+        dequantize(reinterpret_cast<const uint8_t*>(hvd_output->data()),
+                   reinterpret_cast<float*>(hvd_output->source_data()),
+                   output->shape().Size());
+
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
       });
