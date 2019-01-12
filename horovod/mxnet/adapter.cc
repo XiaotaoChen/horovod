@@ -184,6 +184,12 @@ template <> MXUINT8Tensor<NDArray>::MXUINT8Tensor(NDArray* tensor) : MXTensor<ND
   // create uint8 tensor from tensor
   this->uint8dptr_ = reinterpret_cast<uint8_t*>(alloc_mem(len * sizeof(uint8_t) + 2 * sizeof(float), 16));
   quantize(reinterpret_cast<const float*>(tensor->data().dptr<float>()), this->uint8dptr_, len);
+
+//  // check range between fp32 and quantize uint8
+//  float* dequantized_src_ptr = reinterpret_cast<float*>(alloc_mem(len * sizeof(float), 16));
+//  const float* src_ptr = reinterpret_cast<const float*>(tensor->data().dptr<float>());
+//  dequantize(this->uint8dptr_, dequantized_src_ptr, len);
+//  variance_range(src_ptr, dequantized_src_ptr, len);
 }
 
 template <> const MPIDataType MXUINT8Tensor<NDArray>::dtype() const {

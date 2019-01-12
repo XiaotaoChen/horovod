@@ -27,6 +27,8 @@ void dequantize(const uint8_t* src, float* dst, int len);
 
 void quantize_sum(void* invec, void* inoutvec, int* len, MPI_Datatype* datatype);
 
+void variance_range(const float* src, const float* dequantized_src, int len);
+
 } // namespace common
 } // namespace horovod
 
