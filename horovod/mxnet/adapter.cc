@@ -195,7 +195,7 @@ template <> const void* MXUINT8Tensor<NDArray>::data() const {
 }
 
 template <> int64_t MXUINT8Tensor<NDArray>::size() const {
-  return (int64_t)(this->tensor_->shape().Size()) * sizeof(uint8_t);
+  return (int64_t)(this->tensor_->shape().Size()) * sizeof(uint8_t) + 2 * sizeof(float);
 }
 
 template<> void* MXUINT8Tensor<NDArray>::source_data() {
@@ -203,7 +203,7 @@ template<> void* MXUINT8Tensor<NDArray>::source_data() {
 }
 
 template <> MXUINT8Tensor<NDArray>::~MXUINT8Tensor(){
-  free_mem(this->uint8dptr_);
+  free(this->uint8dptr_);
 }
 
 template class MXTensor<NDArray>;

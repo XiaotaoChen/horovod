@@ -17,10 +17,6 @@ namespace common {
 
 void* alloc_mem(size_t size, int alignment);
 
-inline void free_mem(void* ptr) {
-  free(ptr);
-}
-
 inline void fp32_sum(float* invec, float* inoutvec, int* len) {
   for (int i = 0; i < *len; i++) inoutvec[i] += invec[i];
 }
