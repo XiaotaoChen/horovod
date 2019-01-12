@@ -60,12 +60,18 @@ MXPersistentBuffer::AccessData(std::shared_ptr<OpContext> context) const {
 template <class T> MXTensor<T>::MXTensor(T* tensor) : tensor_(tensor) {}
 
 template <> MXTensor<NDArray>::MXTensor(NDArray* tensor) : tensor_(tensor) {
- // mask fp32 to bf16
- // little-end set low 16bits to 0
- float* p = tensor->data().dptr<float>();
- int size = tensor->shape().Size();
- // mask low 21 bits mantissa to simulate 11 bits: [1-sign, 8-exponents, 2-mantissa]
- mask_fp32(p, size, 21);
+// // mask fp32 to bf16
+// // little-end set low 16bits to 0
+// float* p = tensor->data().dptr<float>();
+// int size = tensor->shape().Size();
+// // mask low 21 bits mantissa to simulate 11 bits: [1-sign, 8-exponents, 2-mantissa]
+// mask_fp32(p, size, 21);
+  int len = tensor->shape().Size();
+  // create uint8 tensor from tensor
+  uint8_t* uint8dptr_ = reinterpret_cast<uint8_t*>(alloc_mem(len * sizeof(uint8_t) + 2 * sizeof(float), 16));
+  quantize(reinterpret_cast<const float*>(tensor->data().dptr<float>()), uint8dptr_, len);
+  dequantize(uint8dptr_, reinterpret_cast<float*>(tensor->data().dptr<float>()), len);
+  free(uint8dptr_);
 // bool flag = check_masked(p, size);
 // if(flag) {
 //   printf("mask fp32 to bf16 is correct! \n");

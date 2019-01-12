@@ -98,7 +98,6 @@ int64_t TensorShape::num_elements() const {
   for (auto dim : shape_) {
     result *= dim;
   }
-  result += 2 * sizeof(float);
   return result;
 }
 
