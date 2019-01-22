@@ -55,23 +55,17 @@ int DoAllreduce(NDArray* tensor, NDArray* output, int average, const std::string
 
   auto handle = handle_manager.AllocateHandle(cb);
   auto device = TensorUtil::GetDevice(tensor);
-  auto hvd_tensor = std::make_shared<MXFP16Tensor<NDArray>>(tensor);
+  auto hvd_tensor = std::make_shared<MXTensor<NDArray>>(tensor);
   auto hvd_context = std::make_shared<MXOpContext<NDArray>>(device, output);
   auto hvd_output = hvd_tensor;
   if (tensor->var() != output->var()){
-    hvd_output = std::make_shared<MXFP16Tensor<NDArray>>(output);
+    hvd_output = std::make_shared<MXTensor<NDArray>>(output);
   }
 
   auto enqueue_result = EnqueueTensorAllreduce(
       hvd_context, hvd_tensor, hvd_output, nullptr,
       GetOpNameHandle("allreduce", name, handle), device,
       [handle, average, output, hvd_output](const Status& status) {
-        // convert fp16 tensor to fp32 assign to output
-        int len = output->shape().Size();
-        float* dst = reinterpret_cast<float*>(hvd_output->source_data());
-        const uint16_t* src = reinterpret_cast<const uint16_t*>(hvd_output->data());
-        FP16ToFP32(src, dst, len, 0);
-
         handle_manager.MarkDone(handle, status);
         handle_manager.ExecuteCallback(handle);
       });

@@ -38,6 +38,16 @@ bool is_avx_and_f16c() {
 }
 #endif
 
+void mask_fp16(uint16_t* src, int size, int low_bits) {
+ uint16_t mask_code = 0xffff;
+ for(int i = 0; i < low_bits; i++) {
+   mask_code &= ~(1U << i);
+ }
+ for(int i=0; i< size; i++, src+=1) {
+   *src = (*src) & mask_code;
+ }
+}
+
 void FP32ToFP16(const float* src, uint16_t* dst, int len, int type_flag){
   switch(type_flag)
   {

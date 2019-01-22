@@ -60,6 +60,9 @@ inline void convert_f16_to_f32(__m128i src, __m256* dst) {
 inline void convert_f16_to_f32(unsigned short src, float* dst) {
   *dst = _cvtsh_ss(src);
 }
+
+void mask_fp16(uint16_t* src, int size, int low_bits);
+
 void FP32ToFP16(const float* src, uint16_t* dst, int len, int type_flag);
 
 void FP16ToFP32(const uint16_t* src, float* dst, int len, int type_flag);

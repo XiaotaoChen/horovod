@@ -57,7 +57,22 @@ MXPersistentBuffer::AccessData(std::shared_ptr<OpContext> context) const {
   return buffer_;
 }
 
-template <class T> MXTensor<T>::MXTensor(T* tensor) : tensor_(tensor) {}
+template <class T> MXTensor<T>::MXTensor(T* tensor) : tensor_(tensor) {
+  int len = tensor->shape().Size();
+  size_t fp16_size = len * sizeof(uint16_t);
+  // create fp16 tensor from tensor
+  uint16_t* fp16dptr_ = reinterpret_cast<uint16_t*>(bf16_alloc(fp16_size));
+
+  float* src = reinterpret_cast<float*>(tensor->data().dptr<float>());
+  // convert fp32 to fp16
+  FP32ToFP16(src, fp16dptr_, len, 0);
+  // mask fp16 to uint8
+  mask_fp16(fp16dptr_, len, 8);
+  // convert fp16 to fp32
+  FP16ToFP32(fp16dptr_, src, len, 0);
+  // free fp16dptr
+  free(fp16dptr_);
+}
 
 template <class T> const MPIDataType MXTensor<T>::dtype() const {
   return TensorUtil::GetDType(tensor_);
