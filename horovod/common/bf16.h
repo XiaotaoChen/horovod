@@ -59,6 +59,8 @@ inline void convert_b16_to_f32(__m256i src, __m256i *dst0, __m256i *dst1)
 
 bool check_equal(const unsigned int a, const uint16_t b);
 
+bool check_equal(const uint16_t a, const uint16_t b);
+
 float cal_var_range(const unsigned int a, const uint16_t b);
 
 void cal_min_max_var(const unsigned int* fp32_p,

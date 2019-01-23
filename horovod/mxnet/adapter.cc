@@ -18,6 +18,7 @@
 #endif
 
 #include <mxnet/base.h>
+#include <cstring> // memcpy
 
 #include "adapter.h"
 #include "cuda_util.h"
@@ -57,9 +58,38 @@ MXPersistentBuffer::AccessData(std::shared_ptr<OpContext> context) const {
   return buffer_;
 }
 
-template <class T> MXTensor<T>::MXTensor(T* tensor) : tensor_(tensor) {
+template <> MXTensor<NDArray>::MXTensor(NDArray* tensor) : tensor_(tensor) {
   int len = tensor->shape().Size();
   size_t fp16_size = len * sizeof(uint16_t);
+//  // create fp16 tensor from tensor
+//  uint16_t* fp16dptr_ = reinterpret_cast<uint16_t*>(bf16_alloc(fp16_size));
+//  uint16_t* fp16dptr_mask_ = reinterpret_cast<uint16_t*>(bf16_alloc(fp16_size));
+//
+//  float* src = reinterpret_cast<float*>(tensor->data().dptr<float>());
+//  // convert fp32 to fp16
+//  FP32ToFP16(src, fp16dptr_, len, 0);
+//  // mask fp16 to uint8
+//  memcpy(fp16dptr_mask_, fp16dptr_, fp16_size);
+//  mask_fp16(fp16dptr_mask_, len, 8);
+//  bool equal_flag = true;
+//  for(int i = 0; i < len; i++) {
+//    equal_flag = check_equal(fp16dptr_[i], fp16dptr_mask_[i]);
+//    if(!equal_flag) {
+//      printf("i: %d, fp16, fp16_mask: %x, %x\n", i, fp16dptr_[i], fp16dptr_mask_[i]);
+//      break;
+//    }
+//  }
+//  if(equal_flag) {
+//    printf("len: %d mask is equal\n", len);
+//  }
+//  // convert fp16 to fp32
+//  FP16ToFP32(fp16dptr_mask_, src, len, 0);
+//  // free fp16dptr
+//  free(fp16dptr_);
+//  free(fp16dptr_mask_);
+
+
+
   // create fp16 tensor from tensor
   uint16_t* fp16dptr_ = reinterpret_cast<uint16_t*>(bf16_alloc(fp16_size));
 

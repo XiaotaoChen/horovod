@@ -19,6 +19,12 @@ bool check_equal(const unsigned int a, const uint16_t b){
   return short_a == b;
 }
 
+bool check_equal(const uint16_t a, const uint16_t b){
+  uint8_t short_a = a>>8;
+  uint8_t short_b = b>>8;
+  return short_a == short_b;
+}
+
 float cal_var_range(const unsigned int a, const uint16_t b){
   const float* fp_a = reinterpret_cast<const float*>(&a);
   const unsigned int int_b = b<<16;
