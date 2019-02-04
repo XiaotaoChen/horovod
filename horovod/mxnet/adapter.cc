@@ -56,15 +56,14 @@ MXPersistentBuffer::AccessData(std::shared_ptr<OpContext> context) const {
   return buffer_;
 }
 
-template <class T> MXTensor<T>::MXTensor(T* tensor) : tensor_(tensor) {}
-
 template <> MXTensor<NDArray>::MXTensor(NDArray* tensor) : tensor_(tensor) {
  // mask fp32 to bf16
  // little-end set low 16bits to 0
  float* p = tensor->data().dptr<float>();
  int size = tensor->shape().Size();
  // mask low 21 bits mantissa to simulate 11 bits: [1-sign, 8-exponents, 2-mantissa]
- mask_fp32(p, size, 23);
+// printf("[added by cxt] mask fp32 22bits\n");
+ mask_fp32(p, size, 30);
 // bool flag = check_masked(p, size);
 // if(flag) {
 //   printf("mask fp32 to bf16 is correct! \n");
