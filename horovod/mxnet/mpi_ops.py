@@ -87,7 +87,7 @@ def allreduce(tensor, average=True, name=None, priority=0):
         check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(
             c_in, c_out, name, ctypes.c_bool(average),
             ctypes.c_int(priority)))
-
+    output.wait_to_read()
     return output
 
 
@@ -123,6 +123,7 @@ def allreduce_(tensor, average=True, name=None, priority=0):
         check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allreduce_async(
             c_in, c_out, name, ctypes.c_bool(average),
             ctypes.c_int(priority)))
+    tensor.wait_to_read()
     return tensor
 
 
@@ -162,6 +163,7 @@ def allgather(tensor, name=None, priority=0):
     else:
         check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_allgather_async(
             c_in, c_out, name, ctypes.c_int(priority)))
+    output.wait_to_read()
     return output
 
 
@@ -202,6 +204,7 @@ def broadcast(tensor, root_rank, name=None, priority=0):
         check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_broadcast_async(
             c_in, c_out, name, ctypes.c_int(root_rank),
             ctypes.c_int(priority)))
+    output.wait_to_read()
     return output
 
 
@@ -236,4 +239,5 @@ def broadcast_(tensor, root_rank, name=None, priority=0):
         check_call(MPI_MXNET_LIB_CTYPES.horovod_mxnet_broadcast_async(
             c_in, c_out, name, ctypes.c_int(root_rank),
             ctypes.c_int(priority)))
+    tensor.wait_to_read()
     return tensor
